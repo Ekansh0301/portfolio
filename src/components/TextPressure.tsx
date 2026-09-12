@@ -73,7 +73,7 @@ export default function TextPressure({
 
   /**
    * Size from the container HEIGHT (the glyphs are hairline-thin at rest, so
-   * width tells us nothing), then stretch vertically to fill the box exactly.
+   * width tells us nothing), capped by width on narrow screens.
    */
   const setSize = useCallback(() => {
     if (!containerRef.current || !titleRef.current) return;
@@ -84,13 +84,15 @@ export default function TextPressure({
     // on narrow screens (0.68em is the advance at a mid `wdth` setting).
     const next = Math.max(Math.min(ch * 1.05, cw / (chars.length * 0.68)), 20);
     setFontSize(next);
-    setScaleY(1);
 
-    requestAnimationFrame(() => {
-      if (!titleRef.current) return;
-      const rect = titleRef.current.getBoundingClientRect();
-      if (rect.height > 0) setScaleY(ch / rect.height);
-    });
+    // With line-height 1 the title's layout height is exactly its font size,
+    // so the vertical fit is arithmetic, not a measurement. Measuring the
+    // rendered box used to race React's commit and read a stale transform,
+    // which stretched the word on first load until a resize (a mobile toolbar
+    // collapsing on scroll) re-ran it. Capped at 1 so the word is only ever
+    // compressed to fit, never stretched: on phones, where width limits the
+    // size, the letters keep their natural proportions.
+    setScaleY(Math.min(1, containerRef.current.clientHeight / next));
   }, [chars.length]);
 
   useLayoutEffect(() => {
