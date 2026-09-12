@@ -1,0 +1,209 @@
+@import "tailwindcss";
+
+@theme {
+  /* ---- Surfaces (exact tokens from reference design) ---- */
+  --color-void: #050505;
+  --color-obsidian: #0a0a0b;
+  --color-graphite: #141416;
+  --color-smoke: #1c1c1f;
+  --color-iron: #2a2a2e;
+
+  /* ---- Accent: ember / vibrant orange ---- */
+  --color-ember: #a02a22;
+  --color-ember-bright: #b8342b;
+  --color-ember-dim: #801e18;
+  --color-vibrant-orange: #fc6b2f;
+
+  /* ---- Text ---- */
+  --color-white: #f5f5f7;
+  --color-cloud: #e8e8ea;
+  --color-silver: #b0b0b3;
+  --color-ash: #8a8a8d;
+
+  /* ---- Type ---- */
+  --font-display: "Space Grotesk", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-soft: "Poppins", sans-serif;
+  --font-quote: "Josefin Sans", sans-serif;
+
+  /* ---- Motion ---- */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+:root {
+  --ember-glow: #fc6b2f40;
+  --vibrant-orange-glow: #fc6b2f59;
+  --container-max: 1400px;
+  --container-padding: clamp(20px, 5vw, 80px);
+  --section-padding: clamp(80px, 12vw, 160px);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  background: var(--color-void);
+  color: var(--color-cloud);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+
+/* Lock scroll while the preloader runs */
+body.is-loading { overflow: hidden; height: 100vh; }
+
+::selection { background: var(--color-ember); color: var(--color-white); }
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--color-void); }
+::-webkit-scrollbar-thumb {
+  background: var(--color-iron);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--color-ember); }
+
+/* ============================================================
+   TEXT PRESSURE: variable-font hero title
+   Letters react to cursor proximity via font-variation-settings
+   ============================================================ */
+.text-pressure-title {
+  font-family: "Roboto Flex", sans-serif;
+  color: rgba(255, 255, 255, 0.88);
+  margin: 0;
+  text-transform: uppercase;
+  line-height: 1;
+  font-weight: 100;
+  will-change: transform;
+}
+
+.tp-flex {
+  display: flex;
+  justify-content: space-between;
+}
+
+.text-pressure-title span {
+  display: inline-block;
+  font-variation-settings: "wght" 100, "wdth" 25, "opsz" 8, "GRAD" -140;
+  will-change: font-variation-settings, opacity;
+}
+
+/* ============================================================
+   SCROLL EXPAND: philosophy section
+   A small rounded card that grows to full-bleed as you scroll
+   ============================================================ */
+.scroll-expand__track { position: relative; height: 230vh; }
+
+.scroll-expand__stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scroll-expand__frame {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 38vw;
+  height: 36vh;
+  border-radius: 20px;
+  overflow: hidden;
+  will-change: width, height, border-radius;
+}
+
+@media (max-width: 768px) {
+  .scroll-expand__frame { width: 78vw; height: 30vh; }
+  .scroll-expand__track { height: 200vh; }
+}
+
+.scroll-expand__media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.15);
+  will-change: transform;
+}
+
+/* Tuned for the fresco: heavy enough to keep the quote legible, light
+   enough that the reaching hands still read through it. */
+.scroll-expand__scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(75% 65% at 50% 50%, rgba(0, 0, 0, 0) 0%, rgba(5, 5, 5, 0.72) 100%),
+    linear-gradient(to bottom, rgba(5, 5, 5, 0.28), rgba(5, 5, 5, 0.55));
+}
+
+.scroll-expand__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  will-change: opacity, transform;
+}
+
+.scroll-expand__title {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.8rem, 5vw, 4.2rem);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #fff;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 3;
+  will-change: opacity, letter-spacing;
+}
+
+.scroll-expand__hint {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: rgba(181, 181, 181, 0.5);
+  z-index: 4;
+}
+
+/* ============================================================
+   Ambient dust motes drifting in the hero
+   ============================================================ */
+@keyframes dust-drift {
+  0%   { transform: translate3d(0, 0, 0); opacity: 0; }
+  10%  { opacity: var(--dust-opacity, 0.5); }
+  90%  { opacity: var(--dust-opacity, 0.5); }
+  100% { transform: translate3d(var(--dust-x, 30px), -110px, 0); opacity: 0; }
+}
+
+.dust {
+  background: rgba(252, 107, 47, 0.55);
+  animation: dust-drift var(--dust-duration, 14s) linear infinite;
+  animation-delay: var(--dust-delay, 0s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dust { animation: none !important; }
+  .scroll-expand__track { height: auto; }
+  .scroll-expand__stage { position: relative; }
+}
