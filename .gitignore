@@ -33,5 +33,4 @@ dist
 # Private or local-only files that must not be published
 Rsme.pdf
 tsconfig.tsbuildinfo
-.claude/
 *.mjs
