@@ -49,17 +49,18 @@ function buildCloudTexture(seed: number): HTMLCanvasElement {
   for (let y = 0; y < TEX_H; y++) {
     for (let x = 0; x < TEX_W; x++) {
       const n = fbm((x / TEX_W) * cells, (y / TEX_H) * cells);
-      // Push the field towards wisps: most of it empty, with dense billows.
-      let d = (n - 0.50) / 0.50;
-      d = d > 0 ? Math.pow(d, 1.45) : 0;
+      // A dense, filled mass with billows inside it, like a cloud lit from
+      // within. A sparse field of wisps leaves black gaps inside the glow.
+      let d = (n - 0.3) / 0.7;
+      d = d > 0 ? Math.pow(d, 0.8) : 0;
       const a = Math.min(d, 1);
       const i = (y * TEX_W + x) * 4;
       // Denser cores run hotter. The floor stays a clean, saturated crimson:
       // a maroon base reads as muddy once faint and blurred, and too much
       // green drifts it to rust.
-      px[i] = 238 + a * 17;
-      px[i + 1] = 34 + a * 84;
-      px[i + 2] = 30 + a * 62;
+      px[i] = 236 + a * 19;
+      px[i + 1] = 30 + a * 100;
+      px[i + 2] = 32 + a * 86;
       px[i + 3] = a * 255;
     }
   }
@@ -185,13 +186,13 @@ export default function SmokeCursor() {
       drawField(litCtx, cloudA, t * 260, -t * 90, 1.45, 1);
       drawField(litCtx, cloudB, -t * 170, t * 60, 1.05, 0.75);
 
-      const R = w < 768 ? 220 : 340;
+      const R = w < 768 ? 180 : 272;
       litCtx.globalCompositeOperation = "destination-in";
       const falloff = litCtx.createRadialGradient(lamp.x, lamp.y, 0, lamp.x, lamp.y, R);
       falloff.addColorStop(0, "rgba(255,255,255,1)");
-      falloff.addColorStop(0.24, "rgba(255,255,255,0.88)");
-      falloff.addColorStop(0.46, "rgba(255,255,255,0.5)");
-      falloff.addColorStop(0.68, "rgba(255,255,255,0.2)");
+      falloff.addColorStop(0.3, "rgba(255,255,255,0.96)");
+      falloff.addColorStop(0.52, "rgba(255,255,255,0.64)");
+      falloff.addColorStop(0.72, "rgba(255,255,255,0.15)");
       falloff.addColorStop(0.86, "rgba(255,255,255,0.035)");
       falloff.addColorStop(1, "rgba(255,255,255,0)");
       litCtx.fillStyle = falloff;
@@ -204,14 +205,16 @@ export default function SmokeCursor() {
       ctx.drawImage(lit, 0, 0, w, h);
       ctx.globalAlpha = 1;
       ctx.drawImage(lit, 0, 0, w, h);
-      ctx.globalAlpha = 0.75;
+      ctx.globalAlpha = 1;
+      ctx.drawImage(lit, 0, 0, w, h);
+      ctx.globalAlpha = 0.7;
       ctx.drawImage(lit, 0, 0, w, h);
       ctx.globalAlpha = 1;
 
       // --- 3. a small hot centre, so the lamp itself reads as a source ---
-      const core = ctx.createRadialGradient(lamp.x, lamp.y, 0, lamp.x, lamp.y, R * 0.42);
-      core.addColorStop(0, "rgba(255, 118, 96, 0.3)");
-      core.addColorStop(0.45, "rgba(236, 44, 36, 0.12)");
+      const core = ctx.createRadialGradient(lamp.x, lamp.y, 0, lamp.x, lamp.y, R * 0.55);
+      core.addColorStop(0, "rgba(255, 132, 124, 0.3)");
+      core.addColorStop(0.45, "rgba(240, 58, 44, 0.16)");
       core.addColorStop(1, "rgba(150, 28, 20, 0)");
       ctx.fillStyle = core;
       ctx.fillRect(0, 0, w, h);
@@ -264,7 +267,7 @@ export default function SmokeCursor() {
         className="absolute inset-0 h-full w-full"
         style={{
           mixBlendMode: "screen",
-          filter: "url(#smoke-displace) blur(5px) saturate(1.35) brightness(1.12)",
+          filter: "url(#smoke-displace) blur(5px) saturate(1.3) brightness(1.08)",
         }}
       />
     </div>
