@@ -54,10 +54,12 @@ function buildCloudTexture(seed: number): HTMLCanvasElement {
       d = d > 0 ? Math.pow(d, 1.45) : 0;
       const a = Math.min(d, 1);
       const i = (y * TEX_W + x) * 4;
-      // Denser cores run hotter, thin edges fall to deep ember.
-      px[i] = 176 + a * 76;
-      px[i + 1] = 22 + a * 92;
-      px[i + 2] = 16 + a * 46;
+      // Denser cores run hotter. The floor stays a clean, saturated crimson:
+      // a maroon base reads as muddy once faint and blurred, and too much
+      // green drifts it to rust.
+      px[i] = 238 + a * 17;
+      px[i + 1] = 34 + a * 84;
+      px[i + 2] = 30 + a * 62;
       px[i + 3] = a * 255;
     }
   }
@@ -173,8 +175,8 @@ export default function SmokeCursor() {
 
       // --- 1. the clouds as they sit unlit: barely there, but present ---
       ctx.globalCompositeOperation = "source-over";
-      drawField(ctx, cloudA, t * 260, -t * 90, 1.45, 0.042);
-      drawField(ctx, cloudB, -t * 170, t * 60, 1.05, 0.03);
+      drawField(ctx, cloudA, t * 260, -t * 90, 1.45, 0.02);
+      drawField(ctx, cloudB, -t * 170, t * 60, 1.05, 0.014);
 
       // --- 2. the same clouds, masked to the lamp's reach ---
       litCtx.setTransform(RES, 0, 0, RES, 0, 0);
@@ -183,7 +185,7 @@ export default function SmokeCursor() {
       drawField(litCtx, cloudA, t * 260, -t * 90, 1.45, 1);
       drawField(litCtx, cloudB, -t * 170, t * 60, 1.05, 0.75);
 
-      const R = w < 768 ? 300 : 460;
+      const R = w < 768 ? 220 : 340;
       litCtx.globalCompositeOperation = "destination-in";
       const falloff = litCtx.createRadialGradient(lamp.x, lamp.y, 0, lamp.x, lamp.y, R);
       falloff.addColorStop(0, "rgba(255,255,255,1)");
@@ -200,16 +202,16 @@ export default function SmokeCursor() {
       ctx.globalCompositeOperation = "lighter";
       ctx.globalAlpha = 1;
       ctx.drawImage(lit, 0, 0, w, h);
-      ctx.globalAlpha = 0.9;
+      ctx.globalAlpha = 1;
       ctx.drawImage(lit, 0, 0, w, h);
-      ctx.globalAlpha = 0.45;
+      ctx.globalAlpha = 0.75;
       ctx.drawImage(lit, 0, 0, w, h);
       ctx.globalAlpha = 1;
 
       // --- 3. a small hot centre, so the lamp itself reads as a source ---
       const core = ctx.createRadialGradient(lamp.x, lamp.y, 0, lamp.x, lamp.y, R * 0.42);
-      core.addColorStop(0, "rgba(252, 130, 80, 0.22)");
-      core.addColorStop(0.45, "rgba(214, 52, 38, 0.09)");
+      core.addColorStop(0, "rgba(255, 118, 96, 0.3)");
+      core.addColorStop(0.45, "rgba(236, 44, 36, 0.12)");
       core.addColorStop(1, "rgba(150, 28, 20, 0)");
       ctx.fillStyle = core;
       ctx.fillRect(0, 0, w, h);
@@ -262,7 +264,7 @@ export default function SmokeCursor() {
         className="absolute inset-0 h-full w-full"
         style={{
           mixBlendMode: "screen",
-          filter: "url(#smoke-displace) blur(7px) saturate(1.2)",
+          filter: "url(#smoke-displace) blur(5px) saturate(1.35) brightness(1.12)",
         }}
       />
     </div>
