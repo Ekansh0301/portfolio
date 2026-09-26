@@ -3,6 +3,7 @@ import Lenis from "lenis";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
+import { sections } from "./data/content";
 import Preloader from "./components/Preloader";
 import Nav from "./components/Nav";
 import Hero from "./components/Hero";
@@ -57,7 +58,7 @@ export default function App() {
 
       <main className="relative z-[10]">
         <Hero ready={revealed} />
-        <Philosophy />
+        {sections.philosophy && <Philosophy />}
         <Projects />
         <Research />
         <Skills />

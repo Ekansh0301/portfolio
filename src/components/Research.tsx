@@ -39,10 +39,10 @@ export default function Research() {
               className="pub-row group grid grid-cols-1 gap-4 border-t border-white/8 py-9 transition-colors duration-500 hover:border-ember/40 md:grid-cols-[220px_1fr] md:gap-10"
             >
               <div className="flex flex-col gap-1.5">
-                <span className="font-display text-[12.5px] uppercase tracking-[0.1em] text-cloud">
+                <span className="font-display text-[14.5px] uppercase tracking-[0.08em] text-cloud">
                   {p.venue}
                 </span>
-                <span className="font-display text-[12.5px] font-semibold uppercase tracking-[0.14em] text-ember">
+                <span className="font-display text-[13.5px] font-semibold uppercase tracking-[0.12em] text-ember">
                   {p.status}
                 </span>
               </div>

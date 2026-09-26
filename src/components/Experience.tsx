@@ -55,10 +55,10 @@ export default function Experience() {
               className="exp-row group relative grid grid-cols-1 gap-5 border-t border-white/8 py-10 md:grid-cols-[220px_1fr] md:gap-20"
             >
               <div className="flex flex-col gap-1.5">
-                <span className="font-display text-[11px] tracking-[0.1em] text-silver">
+                <span className="font-display text-[13px] tracking-[0.08em] text-silver">
                   {e.period}
                 </span>
-                <span className="font-display text-[11px] uppercase tracking-[0.16em] text-ember">
+                <span className="font-display text-[13.5px] uppercase tracking-[0.12em] text-ember">
                   {e.org}
                 </span>
               </div>

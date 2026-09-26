@@ -8,8 +8,17 @@ export const profile = {
   email: "ekansh0301@gmail.com",
   phone: "+91 6350353130",
   location: "IIIT Hyderabad, India",
-  availability: "Open to research & SWE roles",
+  availability: "Open to SWE and ML roles",
 } as const;
+
+/**
+ * Sections that can be switched off without touching any component.
+ * Set a flag to false and the section stops rendering; set it back to true
+ * and it returns exactly as it was.
+ */
+export const sections = {
+  philosophy: true,
+};
 
 /**
  * Contact form delivery. Fill in ONE of these and the form starts sending for
