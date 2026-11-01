@@ -199,7 +199,7 @@ footer.foot { display: flex; justify-content: space-between; gap: 1rem; flex-wra
   .script p { margin-bottom: 1.1rem; }
   .titlepage { gap: 1.1rem; }
 }
-.beat { height: 34px; }
+.beat { height: 26px; }
 @media (min-width: 1000px) and (max-height: 820px) {
   .resp { font-size: 0.74rem !important; line-height: 1.36 !important; }
   .beat { height: 24px; }

@@ -212,5 +212,5 @@ export const education = {
   period: "Aug 2023 - May 2028",
   school: "IIIT Hyderabad",
   degree: "Dual degree: B.Tech in Computer Science + MS by Research in Computational Linguistics",
-  line: "CGPA 8.21 · Dean's List · Research List Award 2025-26 · Undergraduate researcher at LTRC",
+  line: "CGPA 8.21 · Dean's List and Research List Award, 2025-26 · Undergraduate researcher at LTRC",
 };

@@ -38,7 +38,7 @@ export default function Lgsm() {
           </button>
         ))}
       </div>
-      <div className="mono dim" style={{ fontSize: "0.58rem", marginTop: -4 }}>shade = fused saliency · outlined = predicted salient</div>
+      
 
       {/* the scene under the lens */}
       <div key={i} style={{ borderLeft: "2px solid var(--accent)", paddingLeft: "0.7rem" }}>
@@ -49,8 +49,8 @@ export default function Lgsm() {
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.5fr) minmax(0,1fr)", gap: "1rem" }}>
         {/* linguistic stream */}
         <div>
-          <div className="mono dim" style={{ fontSize: "0.58rem", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5 }}>linguistic stream · feature pushes</div>
-          <div style={{ display: "grid", gap: 5 }}>
+          <div className="mono dim" style={{ fontSize: "0.58rem", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>linguistic stream · <span style={{ textTransform: "none" }}><i style={{ fontStyle: "normal", color: "var(--accent)" }}>●</i> reported in the paper</span> · h_ling <b style={{ color: "var(--ink)" }}>{s.ling.toFixed(2)}</b></div>
+          <div style={{ display: "grid", gap: 3 }}>
             {s.contrib.map((c) => (
               <div key={c.k} style={{ display: "grid", gridTemplateColumns: "10.2rem 1fr 2.3rem", gap: 6, alignItems: "center" }} className="mono">
                 <span style={{ fontSize: "0.62rem", color: "var(--ink-2)", whiteSpace: "nowrap" }} title={`${c.group}: ${c.note}`}><i style={{ fontStyle: "normal", color: c.paper ? "var(--accent)" : "transparent" }}>●</i> {c.label}</span>
@@ -62,8 +62,6 @@ export default function Lgsm() {
               </div>
             ))}
           </div>
-          <div className="mono dim" style={{ fontSize: "0.56rem", marginTop: 5 }}><i style={{ fontStyle: "normal", color: "var(--accent)" }}>●</i> direction reported in the paper · other groups: illustrative values</div>
-          <div className="mono" style={{ fontSize: "0.62rem", marginTop: 6 }}><span className="dim">h_ling →</span> <b>{s.ling.toFixed(2)}</b></div>
         </div>
 
         {/* semantic stream + gate */}
@@ -82,7 +80,7 @@ export default function Lgsm() {
       </div>
 
       {/* fusion and verdict */}
-      <div style={{ borderTop: "1px solid var(--rule)", paddingTop: "0.6rem", display: "grid", gap: 6 }}>
+      <div style={{ borderTop: "1px solid var(--rule)", paddingTop: "0.4rem", display: "grid", gap: 5 }}>
         <div className="mono" style={{ fontSize: "0.68rem" }}>
           fused = <span className="acc">{ALPHA.toFixed(2)}</span>·{s.ling.toFixed(2)} + <span className="acc">{(1 - ALPHA).toFixed(2)}</span>·{b.sem.toFixed(2)} = <b style={{ fontSize: "0.8rem" }}>{s.fused.toFixed(2)}</b>
         </div>

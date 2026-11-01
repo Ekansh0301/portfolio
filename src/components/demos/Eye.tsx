@@ -168,7 +168,7 @@ export default function Eye() {
   const stepHead = (n: number, label: string, detail: string) => (
     <div style={{ display: "grid", gridTemplateColumns: "1rem 1fr", gap: 8, alignItems: "start", opacity: step >= n ? 1 : 0.3, transition: "opacity 0.4s" }}>
       <span className="mono" style={{ color: step >= n ? "var(--accent)" : "var(--ink-3)" }}>{step > n || (step === n && n === 4) ? "✓" : step === n ? "…" : "·"}</span>
-      <span><span className="mono" style={{ color: "var(--ink)", fontSize: "0.78rem" }}>{label}</span><br /><span className="mono dim" style={{ fontSize: "0.62rem" }}>{detail}</span></span>
+      <span><span className="mono" style={{ color: "var(--ink)", fontSize: "0.78rem" }}>{label}</span>{detail && <><br /><span className="mono dim" style={{ fontSize: "0.62rem" }}>{detail}</span></>}</span>
     </div>
   );
   const pts = history.map((h, i) => ({ h, i, x: 10 + i * 30 })).filter((p): p is { h: number; i: number; x: number } => p.h !== null);
@@ -188,11 +188,11 @@ export default function Eye() {
           {!ready && <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}><span className="mono dim">loading photo…</span></div>}
         </div>
 
-        <div style={{ display: "grid", gap: "0.65rem" }}>
-          {stepHead(1, "capture", "inside the guide box")}
+        <div style={{ display: "grid", gap: "0.4rem" }}>
+          {stepHead(1, "capture", "")}
           <div>
             {stepHead(2, "quality gate", m ? (m.pass ? "sharp and well lit: accepted" : "rejected: retake the photo") : "blur and brightness")}
-            <div style={{ marginLeft: 24, marginTop: 6, display: "grid", gap: 7, opacity: step >= 2 ? 1 : 0.25, transition: "opacity 0.4s" }}>
+            <div style={{ marginLeft: 24, marginTop: 5, display: "grid", gap: 5, opacity: step >= 2 ? 1 : 0.25, transition: "opacity 0.4s" }}>
               <div>
                 <div className="mono dim" style={{ ...cap, display: "flex", justifyContent: "space-between" }}><span>sharpness</span><span>{m ? Math.round(m.sharp) : "–"} / {BLUR_MIN}</span></div>
                 <div style={{ position: "relative", height: 7, background: "var(--bg-2)", borderRadius: 4, marginTop: 3 }}>
@@ -202,7 +202,7 @@ export default function Eye() {
               </div>
               <div>
                 <div className="mono dim" style={{ ...cap, display: "flex", justifyContent: "space-between" }}><span>brightness histogram</span><span>mean {m ? Math.round(m.meanL) : "–"}</span></div>
-                <svg viewBox={`0 0 ${BINS} 10`} preserveAspectRatio="none" style={{ width: "100%", height: 30, display: "block", marginTop: 3 }} aria-label="Brightness histogram of the capture">
+                <svg viewBox={`0 0 ${BINS} 10`} preserveAspectRatio="none" style={{ width: "100%", height: 22, display: "block", marginTop: 3 }} aria-label="Brightness histogram of the capture">
                   <rect x={(LUM[0] / 256) * BINS} width={((LUM[1] - LUM[0]) / 256) * BINS} y="0" height="10" fill="color-mix(in srgb, var(--ok) 14%, transparent)" />
                   {m?.hist.map((h, i) => <rect key={i} x={i + 0.1} width="0.8" y={10 - (h / hmax) * 10} height={(h / hmax) * 10} fill="var(--ink-3)" />)}
                 </svg>
@@ -210,11 +210,11 @@ export default function Eye() {
             </div>
           </div>
           {stepHead(3, "segment", step >= 3 && m?.redness != null && assets.current ? `palpebral conjunctiva · ${(assets.current.cover * 100).toFixed(0)}% of the frame · redness ${(m.redness * 100).toFixed(0)}%` : "palpebral conjunctiva")}
-          {stepHead(4, "haemoglobin", "estimate, then WHO class")}
+          {stepHead(4, "haemoglobin", "")}
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,0.9fr) minmax(0,1.3fr) minmax(0,1fr)", gap: "0.9rem", alignItems: "center", border: "1px solid var(--rule)", borderRadius: 10, padding: "0.75rem 0.9rem", background: "var(--card)" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,0.9fr) minmax(0,1.3fr) minmax(0,1fr)", gap: "0.9rem", alignItems: "center", border: "1px solid var(--rule)", borderRadius: 10, padding: "0.55rem 0.8rem", background: "var(--card)" }}>
         <div>
           <div className="mono dim" style={{ ...cap, marginBottom: 4 }}>analyzed image</div>
           <canvas ref={roi} width={220} height={110} style={{ width: "100%", height: "auto", background: "var(--bg-2)", borderRadius: 6, display: "block" }} aria-label="Extracted conjunctiva region" />
@@ -235,7 +235,7 @@ export default function Eye() {
         </div>
         <div>
           <div className="mono dim" style={{ ...cap, marginBottom: 4 }}>patient history</div>
-          <svg viewBox="0 0 80 46" style={{ height: 66, display: "block", width: "100%" }} aria-label="Haemoglobin across visits">
+          <svg viewBox="0 0 80 46" style={{ height: 58, display: "block", width: "100%" }} aria-label="Haemoglobin across visits">
             {[8, 11, 12].map((z) => <line key={z} x1="0" x2="80" y1={yOf(z)} y2={yOf(z)} stroke="var(--rule)" strokeDasharray="2 2" strokeWidth="0.6" />)}
             {pts.length > 1 && <polyline points={pts.map((p) => `${p.x},${yOf(p.h)}`).join(" ")} fill="none" stroke="var(--accent)" strokeWidth="1.3" />}
             {pts.map((p) => <g key={p.i}><circle cx={p.x} cy={yOf(p.h)} r="2" fill="var(--accent)" /><text x={p.x} y={yOf(p.h) - 4} textAnchor="middle" fontSize="4.6" style={{ fill: "var(--ink-2)" }}>{p.h.toFixed(1)}</text></g>)}
