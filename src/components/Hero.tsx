@@ -1,114 +1,95 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { profile, scenes, socials } from "../data/content";
 
-type Block = { kind: "slug" | "action" | "cue" | "dlg"; text: string };
-
-// The opening is written as a screenplay, because the research is about reading one.
-const SCRIPT: Block[] = [
-  { kind: "slug", text: "INT. LTRC, IIIT HYDERABAD - NIGHT" },
-  { kind: "action", text: "A lab that never fully powers down. A researcher reads a screenplay the way a model would: scene by scene, deciding which ones matter." },
-  { kind: "cue", text: "Ekansh" },
-  { kind: "dlg", text: "Turning research into systems." },
-  { kind: "action", text: "Then he builds what he read about. A quorum store that survives a partition. A voice assistant that never leaves the machine. A cipher suite meant to be broken." },
-  { kind: "action", text: "Everything here is a working model. Break it." },
-];
-
-const REACH = 150; // px over which attention falls off
-const FLOOR = 0.16;
-
 /**
- * The cursor is the query vector. Every word is a token with a key; its opacity
- * is its softmax attention weight, so the words nearest the pointer light up.
- * Idle, attention is uniform and the page reads normally.
+ * The name, spelled out in work. Every letter of EKANSH GOYAL is a tile that
+ * flips to reveal something from the projects behind this site. A spotlight
+ * walks along the name on its own; hover or tap any letter to take over.
  */
+type L = { ch: string; word: string; line: string; to: string };
+const ROWS: L[][] = [
+  [
+    { ch: "E", word: "EMNLP", line: "Scene saliency in movie screenplays, a main-conference paper.", to: "research" },
+    { ch: "K", word: "Key-value", line: "QuorumKV: a masterless store that keeps answering through a partition.", to: "systems" },
+    { ch: "A", word: "Anemia", line: "Haemoglobin from a photo of the inner eyelid, on the phone.", to: "applied" },
+    { ch: "N", word: "Narrative", line: "The Director LLM: a Dungeon Master trained by four critics.", to: "systems" },
+    { ch: "S", word: "SemEval", line: "Truth Gradient: reading belief in a Reddit post.", to: "research" },
+    { ch: "H", word: "Håstad", line: "Breaking RSA with no key at all, inside CryptoStack.", to: "intelligence" },
+  ],
+  [
+    { ch: "G", word: "Gate", line: "LGSM's learned gate between BERT and linguistic features.", to: "research" },
+    { ch: "O", word: "Offline", line: "Vox: a voice assistant that runs on a 4 GB laptop GPU.", to: "intelligence" },
+    { ch: "Y", word: "Yao", line: "Two-party computation and the millionaires' problem.", to: "intelligence" },
+    { ch: "A", word: "AES", line: "Written from the spec, then used to break ECB.", to: "intelligence" },
+    { ch: "L", word: "LRU", line: "The naming server's cache in my distributed file system.", to: "applied" },
+  ],
+];
+const FLAT = ROWS.flat();
+
 export default function Hero({ id }: { id: string }) {
-  const root = useRef<HTMLDivElement>(null);
-  const readout = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(1);
+  const hover = useRef(false);
 
   useEffect(() => {
-    const el = root.current;
-    if (!el) return;
-    const words = Array.from(el.querySelectorAll<HTMLElement>(".w"));
-    const cur = words.map(() => 1);
-    const p = { x: 0, y: 0, active: false };
-    let raf = 0;
-    let top = -1;
-
-    const onMove = (e: PointerEvent) => {
-      const r = el.getBoundingClientRect();
-      p.active = e.clientX > r.left - 40 && e.clientX < r.right + 40 && e.clientY > r.top - 40 && e.clientY < r.bottom + 40;
-      p.x = e.clientX;
-      p.y = e.clientY;
-    };
-    window.addEventListener("pointermove", onMove, { passive: true });
-
-    const frame = () => {
-      const rects = words.map((w) => w.getBoundingClientRect());
-      const target = words.map((_, i) => {
-        if (!p.active) return 1;
-        const r = rects[i];
-        const d = Math.hypot(p.x - (r.left + r.width / 2), p.y - (r.top + r.height / 2));
-        return Math.exp(-((d / REACH) ** 2) * 2);
-      });
-      let sum = 0;
-      target.forEach((t) => (sum += t));
-      let best = 0;
-      words.forEach((w, i) => {
-        const next = cur[i] + (target[i] - cur[i]) * 0.2;
-        if (Math.abs(next - cur[i]) > 0.004) {
-          cur[i] = next;
-          w.style.opacity = String(FLOOR + (1 - FLOOR) * next);
-        }
-        if (target[i] > target[best]) best = i;
-      });
-      w_hl(words, p.active ? best : -1, top, (t) => (top = t));
-      if (readout.current) {
-        readout.current.innerHTML = p.active
-          ? `query = cursor · attends to <b>"${words[best].textContent}"</b> (${Math.round((target[best] / sum) * 100)}%)`
-          : "move your cursor over the page: it is the query, the words attend to it";
-      }
-      raf = requestAnimationFrame(frame);
-    };
-    raf = requestAnimationFrame(frame);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("pointermove", onMove);
-    };
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t = window.setInterval(() => { if (!hover.current) setActive((a) => (a + 1) % FLAT.length); }, 2100);
+    return () => clearInterval(t);
   }, []);
 
-  let n = 0;
+  const cur = FLAT[active];
+  let n = -1;
   return (
     <section id={id} className="page hero">
       <div className="hero-main">
         <div className="wrap hero-grid">
           <div className="hero-left">
-            <div className="script" ref={root}>
-              {SCRIPT.map((b, i) => (
-                <p key={i} className={b.kind === "dlg" ? "dlg" : b.kind}>
-                  {b.text.split(" ").map((w) => (
-                    <span key={n++} className="w">{w} </span>
-                  ))}
-                </p>
+            <div className="mono dim" style={{ textTransform: "uppercase", letterSpacing: "0.12em" }}>A portfolio in seven scenes · hover the letters</div>
+
+            <div className="tiles" onPointerLeave={() => { hover.current = false; }}>
+              {ROWS.map((row, r) => (
+                <div className="tile-row" key={r} style={{ paddingLeft: r ? "clamp(0.4rem, 3vw, 2.4rem)" : 0 }}>
+                  {row.map((l) => {
+                    const idx = ++n, on = idx === active;
+                    return (
+                      <button key={idx} className={`tile ${on ? "on" : ""}`} aria-label={`${l.ch}: ${l.word}. ${l.line}`}
+                        onPointerEnter={() => { hover.current = true; setActive(idx); }}
+                        onFocus={() => { hover.current = true; setActive(idx); }}
+                        onClick={() => document.getElementById(l.to)?.scrollIntoView({ behavior: "smooth" })}>
+                        <span className="tile-in">
+                          <span className="face front">{l.ch}</span>
+                          <span className="face back"><b>{l.ch}</b><i>{l.word}</i></span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               ))}
             </div>
-            <div className="attn" ref={readout} aria-hidden />
-          </div>
 
-          <div className="titlepage">
-            <div className="mono dim"><span className="status">{profile.availability}</span></div>
-            <h1>{profile.first[0] + profile.first.slice(1).toLowerCase()} {profile.last[0] + profile.last.slice(1).toLowerCase()}</h1>
-            <p className="role">{profile.blurb}</p>
-            <ul className="facts">
-              <li><b>EMNLP 2026</b><span>Scene saliency in movie screenplays, main conference</span></li>
-              <li><b>SEMEVAL-26</b><span>Conspiracy belief detection, sole author</span></li>
-              <li><b>LTRC</b><span>Undergraduate researcher, IIIT Hyderabad</span></li>
-            </ul>
+            <div className="tile-cap" key={active} aria-live="polite">
+              <span className="mono acc">{cur.ch} · {cur.word}</span>
+              <span>{cur.line}</span>
+              <a className="link" href={`#${cur.to}`}>see it ↓</a>
+            </div>
+
+            <p className="tagline">{profile.tagline}</p>
             <div className="row">
               <a className="btn solid" href="#systems">Open the reel ↓</a>
               {socials.filter((x) => x.label !== "Email").map((x) => (
                 <a key={x.label} className="btn ghost" href={x.href} target="_blank" rel="noreferrer">{x.label} ↗</a>
               ))}
             </div>
+          </div>
+
+          <div className="titlepage">
+            <div className="mono dim"><span className="status">{profile.availability}</span></div>
+            <p className="role" style={{ fontFamily: "var(--serif)", fontSize: "clamp(1.25rem, 1.9vw, 1.7rem)", lineHeight: 1.25, color: "var(--ink)" }}>{profile.eyebrow}</p>
+            <p className="role">{profile.blurb}</p>
+            <ul className="facts">
+              <li><b>EMNLP 2026</b><span>Scene saliency in movie screenplays, main conference</span></li>
+              <li><b>SEMEVAL-26</b><span>Conspiracy belief detection, sole author</span></li>
+              <li><b>LTRC</b><span>Undergraduate researcher, IIIT Hyderabad</span></li>
+            </ul>
           </div>
         </div>
       </div>
@@ -124,12 +105,4 @@ export default function Hero({ id }: { id: string }) {
       </nav>
     </section>
   );
-}
-
-/** Keep the strongest word highlighted in the accent colour. */
-function w_hl(words: HTMLElement[], best: number, prev: number, set: (n: number) => void) {
-  if (best === prev) return;
-  if (prev >= 0) words[prev].classList.remove("hl");
-  if (best >= 0) words[best].classList.add("hl");
-  set(best);
 }

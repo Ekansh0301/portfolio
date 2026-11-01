@@ -1,115 +1,129 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * Real generations from the project's README (PPO/README.md): the supervised
- * Phi-2 baseline and the PPO-trained policy answering the same player action,
- * with the critics' scores for each. The intent classifier picks the weights,
- * and the reward below is computed live from those scores and weights
- * (renormalised over the critics the README reports for that turn).
+ * The Director's critics catching a supervised baseline that sounds fine and is
+ * quietly wrong. Scenarios come from the project's READMEs: the Fireball pair
+ * is a real generation pair with real critic scores (PPO/README.md); the three
+ * world-state traps (contradiction, hallucination, amnesia) are the World
+ * Consistency critic's own taxonomy and scoring (0.0 / 0.3 / 0.5, consistent
+ * = 1.0). Intent weights are the README's. The wording of the three
+ * world-state responses is illustrative.
  */
 type K = "N" | "C" | "W" | "Ch";
 const NAMES: Record<K, string> = { N: "Narrative", C: "Causal", W: "World", Ch: "Character" };
-type Scores = Partial<Record<K, number>>;
-type Turn = { tab: string; intent: "ACTION" | "EXPLORE" | "DIALOGUE"; w: Record<K, number>; player: string; sft: string; ppo: string; ss: Scores; ps: Scores };
+const WEIGHTS: Record<string, Record<K, number>> = {
+  EXPLORE: { N: 0.4, C: 0.2, W: 0.3, Ch: 0.1 },
+  ACTION: { N: 0.2, C: 0.4, W: 0.3, Ch: 0.1 },
+  DIALOGUE: { N: 0.2, C: 0.2, W: 0.2, Ch: 0.4 },
+};
+type Row = { k: K; v: number };
+type Side = { text: string; flag?: string; rows: Row[]; verdict: string; gains?: string[] };
+type Turn = { tab: string; trap: string; focus: K; state: string[]; player: string; intent: keyof typeof WEIGHTS; base: Side; ppo: Side };
 
 const TURNS: Turn[] = [
   {
-    tab: "Fireball", intent: "ACTION", w: { N: 0.2, C: 0.4, W: 0.3, Ch: 0.1 },
+    tab: "Ignored action", trap: "causal gap", focus: "C", intent: "ACTION",
+    state: ["tavern, evening", "goblins in the far corner"],
     player: "I cast Fireball at the group of goblins in the corner!",
-    sft: "The tavern erupts in chaos as patrons dive for cover. The bartender shouts something about his establishment. You notice the wooden beams overhead are old and weathered, creating an atmosphere of danger.",
-    ppo: "Your Fireball streaks toward the corner, exploding in a brilliant sphere of flame. The goblins shriek as the fire engulfs them. Roll 8d6 fire damage. Two goblins are immediately incinerated, while the third staggers out of the flames, badly burned and smoking. What do you do next?",
-    ss: { N: 0.61, C: 0.09, W: 0.54 }, ps: { N: 0.68, C: 0.94, W: 0.89 },
+    base: { text: "The tavern erupts in chaos as patrons dive for cover.", flag: "The tavern erupts in chaos as patrons dive for cover.", rows: [{ k: "N", v: 0.61 }, { k: "C", v: 0.09 }, { k: "W", v: 0.54 }], verdict: "Never resolves the spell: no damage, no goblins." },
+    ppo: { text: "Your Fireball streaks into the corner and blooms into a sphere of flame. The goblins shriek as it engulfs them. Roll 8d6 fire damage. Two are incinerated outright; the third staggers clear, badly burned.", rows: [{ k: "N", v: 0.68 }, { k: "C", v: 0.94 }, { k: "W", v: 0.89 }], verdict: "Resolves the action with consequences.", gains: ["resolves the spell", "damage dice (8d6)", "names who survives"] },
   },
   {
-    tab: "Ancient door", intent: "EXPLORE", w: { N: 0.4, C: 0.2, W: 0.3, Ch: 0.1 },
-    player: "I examine the ancient door, looking for any traps or mechanisms.",
-    sft: "You look at the door. It's made of stone and has some carvings on it. Roll a perception check to see if you find anything.",
-    ppo: "The door before you is a masterwork of ancient dwarven craftsmanship. Intricate runes spiral across its surface, glowing faintly with residual magic. The stone is cold to the touch, almost unnaturally so, and you can feel a faint vibration emanating from within. Around the frame, thin channels suggest poison traps or blade mechanisms. The door has no visible handle, only a circular indentation at chest height. Roll Investigation with advantage.",
-    ss: { N: 0.27, C: 0.38, W: 0.55 }, ps: { N: 0.91, C: 0.59, W: 0.87 },
+    tab: "Locked door", trap: "contradiction", focus: "W", intent: "ACTION",
+    state: ["ancient door: LOCKED", "key: not found"],
+    player: "I push on the door.",
+    base: { text: "The door gives way with a groan of old hinges, revealing a dark corridor.", flag: "The door gives way with a groan of old hinges", rows: [{ k: "W", v: 0.0 }], verdict: "Door state changed from locked to open with no unlock action." },
+    ppo: { text: "The door doesn't budge. The iron lock holds fast, and fresh scratches around the keyhole suggest someone else has tried before you. Something small and brass glints in the dust by the hinge.", rows: [{ k: "W", v: 1.0 }], verdict: "Consistent with the established state.", gains: ["keeps the lock", "adds a clue", "points toward the key"] },
   },
   {
-    tab: "Innkeeper", intent: "DIALOGUE", w: { N: 0.2, C: 0.2, W: 0.2, Ch: 0.4 },
-    player: "I ask the innkeeper what she knows about the mysterious stranger.",
-    sft: "The innkeeper tells you about a stranger who came through town recently. They were wearing a dark cloak and didn't talk much. She thinks they might be dangerous. She serves you some food and goes back to work.",
-    ppo: "Margery the innkeeper leans in close, her weathered face creased with concern. “Aye, that one,” she whispers in her thick northern accent. “Came in three nights past, paid in gold—old gold, mind you. Kept his hood up the whole time, wouldn't look me in the eye. Asked about the old ruins up north, same as you lot. Left before dawn without a word.” She wipes her hands on her apron nervously. “Bad business, I tell you.”",
-    ss: { N: 0.49, C: 0.28, Ch: 0.08 }, ps: { N: 0.79, C: 0.57, Ch: 0.81 },
+    tab: "Quiet tavern", trap: "hallucination", focus: "W", intent: "EXPLORE",
+    state: ["tavern: quiet, dimly lit", "a few patrons, scattered"],
+    player: "I look around the room.",
+    base: { text: "Two merchants haggle by the fire while a pair of guards share a table near the door. A bard tunes his lute beside three scholars.", flag: "Two merchants haggle by the fire while a pair of guards share a table near the door. A bard tunes his lute beside three scholars", rows: [{ k: "W", v: 0.3 }], verdict: "Eight new people in a room established as quiet." },
+    ppo: { text: "The tavern is nearly empty. A hooded traveler sits alone in the corner nursing an ale, and glances up when you turn. The only other sound is the crackle of the hearth.", rows: [{ k: "W", v: 1.0 }], verdict: "One new entity: within the acceptable range.", gains: ["one new entity only", "keeps the mood quiet", "gives you a hook"] },
+  },
+  {
+    tab: "Forgotten name", trap: "amnesia", focus: "W", intent: "DIALOGUE",
+    state: ["innkeeper: Gregor Thorngage", "halfling, proprietor"],
+    player: "I ask the innkeeper about local rumors.",
+    base: { text: "The innkeeper leans close. “Lights in the old quarry,” he says, though you realise you never caught his name.", flag: "though you realise you never caught his name", rows: [{ k: "W", v: 0.5 }], verdict: "He introduced himself as Gregor Thorngage; the name is lost." },
+    ppo: { text: "Gregor Thorngage leans across the bar and lowers his voice. “Lights in the old quarry, friend. Folk won't go near it after dark.” He wipes the same glass twice, eyes on the door.", rows: [{ k: "W", v: 1.0 }], verdict: "Keeps the NPC's name and voice.", gains: ["Gregor, by name", "rumor in his own voice", "a hook: the quarry"] },
   },
 ];
-const STEPS = [[0, 0.412], [250, 0.507], [500, 0.571], [750, 0.598], [1000, 0.611]] as const;
 
-const reward = (s: Scores, w: Record<K, number>) => {
-  const ks = Object.keys(s) as K[];
-  const wsum = ks.reduce((a, k) => a + w[k], 0);
-  return ks.reduce((a, k) => a + w[k] * (s[k] as number), 0) / wsum;
-};
+function Flagged({ text, flag }: { text: string; flag?: string }) {
+  const i = flag ? text.indexOf(flag) : -1;
+  if (i < 0 || !flag) return <>{text}</>;
+  return <>{text.slice(0, i)}<mark style={{ background: "color-mix(in srgb, var(--bad) 18%, transparent)", color: "inherit", borderBottom: "2px solid var(--bad)", borderRadius: 2 }}>{flag}</mark>{text.slice(i + flag.length)}</>;
+}
 
-function Side({ title, text, scores, w, tone }: { title: string; text: string; scores: Scores; w: Record<K, number>; tone: "base" | "ppo" }) {
-  const ks = Object.keys(scores) as K[];
-  const lead = (Object.keys(w) as K[]).reduce((a, b) => (w[a] >= w[b] ? a : b));
-  const r = reward(scores, w);
+function Card({ title, side, tone, focus }: { title: string; side: Side; tone: "base" | "ppo"; focus: K }) {
+  const good = tone === "ppo";
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", border: `1px solid ${tone === "ppo" ? "var(--accent)" : "var(--rule)"}`, borderRadius: 10, padding: "0.65rem 0.75rem", background: "var(--card)", minWidth: 0 }}>
-      <div className="mono" style={{ fontSize: "0.62rem", letterSpacing: "0.08em", textTransform: "uppercase", color: tone === "ppo" ? "var(--accent)" : "var(--ink-3)" }}>{title}</div>
-      <p className="resp" style={{ margin: 0, fontFamily: "var(--serif)", fontSize: "0.8rem", lineHeight: 1.42, flex: 1, color: "var(--ink)" }}>{text}</p>
-      <div style={{ display: "grid", gap: 4 }}>
-        {ks.map((k) => (
-          <div key={k} style={{ display: "grid", gridTemplateColumns: "4.4rem 1fr 2rem", gap: 6, alignItems: "center" }} className="mono">
-            <span style={{ fontSize: "0.6rem", color: k === lead ? "var(--accent)" : "var(--ink-3)" }}>{NAMES[k]}{k === lead ? " ◂" : ""}</span>
-            <div className="bar" style={{ height: 6 }}><i style={{ width: `${(scores[k] as number) * 100}%`, background: k === lead ? "var(--accent)" : "var(--ink-3)" }} /></div>
-            <span style={{ fontSize: "0.62rem", textAlign: "right" }}>{(scores[k] as number).toFixed(2)}</span>
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.55rem", border: `1px solid ${good ? "var(--accent)" : "var(--rule)"}`, borderRadius: 10, padding: "0.75rem 0.85rem", background: "var(--card)", minWidth: 0 }}>
+      <div className="mono" style={{ fontSize: "0.64rem", letterSpacing: "0.08em", textTransform: "uppercase", color: good ? "var(--accent)" : "var(--ink-3)" }}>{title}</div>
+      <p style={{ margin: 0, fontFamily: "var(--serif)", fontSize: good ? "1rem" : "0.95rem", lineHeight: 1.5, flex: 1, color: good ? "var(--ink)" : "var(--ink-2)" }}><Flagged text={side.text} flag={side.flag} /></p>
+      {side.gains && <div className="chips">{side.gains.map((g) => <span key={g} className="chip" style={{ background: "color-mix(in srgb, var(--ok) 14%, transparent)", color: "var(--ok)" }}>+ {g}</span>)}</div>}
+      <div style={{ display: "grid", gap: 5 }}>
+        {side.rows.map((r) => (
+          <div key={r.k} className="mono" style={{ display: "grid", gridTemplateColumns: "4.6rem 1fr 2.2rem", gap: 8, alignItems: "center" }}>
+            <span style={{ fontSize: "0.64rem", color: r.k === focus ? "var(--accent)" : "var(--ink-2)" }}>{NAMES[r.k]}</span>
+            <div className="bar" style={{ height: 7 }}><i style={{ width: `${r.v * 100}%`, background: r.v < 0.5 ? "var(--bad)" : good ? "var(--ok)" : "var(--accent)" }} /></div>
+            <span style={{ fontSize: "0.68rem", textAlign: "right", color: r.v < 0.5 ? "var(--bad)" : "var(--ink)" }}>{r.v.toFixed(2)}</span>
           </div>
         ))}
       </div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", borderTop: "1px solid var(--rule)", paddingTop: 6 }}>
-        <span className="mono dim" style={{ fontSize: "0.58rem" }}>intent-weighted reward</span>
-        <span style={{ fontFamily: "var(--serif)", fontSize: "1.45rem", color: tone === "ppo" ? "var(--accent)" : "var(--ink)", lineHeight: 1 }}>{r.toFixed(2)}</span>
-      </div>
+      <div className="mono" style={{ fontSize: "0.66rem", lineHeight: 1.4, color: good ? "var(--ok)" : "var(--bad)", borderTop: "1px solid var(--rule)", paddingTop: 6 }}>{good ? "✓" : "✗"} {side.verdict}</div>
     </div>
   );
 }
 
 export default function Critics() {
-  const [i, setI] = useState(0);
+  const [i, setI] = useState(1);
   const manual = useRef(false);
   useEffect(() => {
-    const id = window.setInterval(() => { if (!manual.current) setI((x) => (x + 1) % TURNS.length); }, 10000);
+    const id = window.setInterval(() => { if (!manual.current) setI((x) => (x + 1) % TURNS.length); }, 9000);
     return () => clearInterval(id);
   }, []);
   const T = TURNS[i];
-  const keys = Object.keys(NAMES) as K[];
+  const w = WEIGHTS[T.intent];
+  const top = Math.max(...Object.values(w));
 
   return (
     <div className="stage">
       <div className="stage-h">
-        <span className="mono">same player action, two policies</span>
+        <span className="mono">where the supervised model sounds right and is wrong</span>
         <div className="tabs">{TURNS.map((t, k) => <button key={t.tab} className={`sm ${i === k ? "on" : ""}`} onClick={() => { manual.current = true; setI(k); }}>{t.tab}</button>)}</div>
       </div>
 
-      {/* player action → intent classifier → weights */}
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.5fr) auto minmax(0,1.1fr)", gap: "0.6rem", alignItems: "center" }}>
-        <div style={{ fontFamily: "var(--serif)", fontStyle: "italic", fontSize: "0.98rem", lineHeight: 1.35 }}>“{T.player}”</div>
-        <div className="mono" style={{ textAlign: "center", fontSize: "0.58rem", color: "var(--ink-3)" }}>intent<br /><b style={{ color: "var(--accent)", fontSize: "0.7rem" }}>{T.intent}</b></div>
-        <div style={{ display: "flex", gap: 3, alignItems: "flex-end", height: 40 }} aria-label="Critic weights for this intent">
-          {keys.map((k) => (
-            <div key={k} style={{ flex: 1, textAlign: "center" }} className="mono">
-              <div style={{ height: `${T.w[k] * 90}px`, minHeight: 4, background: T.w[k] === Math.max(...Object.values(T.w)) ? "var(--accent)" : "var(--ink-3)", opacity: T.w[k] === Math.max(...Object.values(T.w)) ? 1 : 0.55, borderRadius: 3, transition: "height 0.5s var(--ease)" }} />
-              <span style={{ fontSize: "0.52rem", color: "var(--ink-3)" }}>{k} {Math.round(T.w[k] * 100)}</span>
-            </div>
-          ))}
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.25fr) minmax(0,1fr)", gap: "1rem", alignItems: "start" }}>
+        <div style={{ display: "grid", gap: "0.55rem" }}>
+          <div>
+            <div className="mono dim" style={{ fontSize: "0.6rem", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3 }}>player · trap <b className="acc">{T.trap}</b></div>
+            <div style={{ fontFamily: "var(--serif)", fontStyle: "italic", fontSize: "1.08rem", lineHeight: 1.3 }}>“{T.player}”</div>
+          </div>
+          <div>
+            <div className="mono dim" style={{ fontSize: "0.6rem", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>world state the critic tracks</div>
+            <div className="chips">{T.state.map((s) => <span key={s} className="chip" style={{ fontSize: "0.7rem" }}>{s}</span>)}</div>
+          </div>
+        </div>
+        <div>
+          <div className="mono dim" style={{ fontSize: "0.6rem", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5 }}>intent <b className="acc">{T.intent}</b> → critic weights</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 14px" }}>
+            {(Object.keys(NAMES) as K[]).map((k) => (
+              <div key={k} className="mono" style={{ display: "grid", gridTemplateColumns: "3.9rem 1fr 2rem", gap: 6, alignItems: "center" }}>
+                <span style={{ fontSize: "0.64rem", color: w[k] === top ? "var(--accent)" : "var(--ink-2)" }}>{NAMES[k]}</span>
+                <div className="bar" style={{ height: 8 }}><i style={{ width: `${(w[k] / 0.4) * 100}%`, background: w[k] === top ? "var(--accent)" : "var(--ink-3)", transition: "width 0.5s var(--ease)" }} /></div>
+                <span style={{ fontSize: "0.66rem", textAlign: "right" }}>{Math.round(w[k] * 100)}%</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.7rem", flex: 1 }}>
-        <Side key={`s${i}`} title="Supervised baseline (Phi-2 SFT)" text={T.sft} scores={T.ss} w={T.w} tone="base" />
-        <Side key={`p${i}`} title="After PPO with four critics" text={T.ppo} scores={T.ps} w={T.w} tone="ppo" />
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "0.8rem", alignItems: "center" }}>
-        <span className="mono dim" style={{ fontSize: "0.58rem", lineHeight: 1.3 }}>mean reward<br />over PPO steps</span>
-        <svg viewBox="0 0 100 22" preserveAspectRatio="none" style={{ height: 26, width: "100%" }} aria-label="Mean reward rising from 0.412 to 0.611 over 1000 PPO steps">
-          <polyline points={STEPS.map(([s, r]) => `${s / 10},${20 - ((r - 0.4) / 0.22) * 18}`).join(" ")} fill="none" stroke="var(--accent)" strokeWidth="1.4" vectorEffect="non-scaling-stroke" />
-          {STEPS.map(([s, r]) => <circle key={s} cx={s / 10} cy={20 - ((r - 0.4) / 0.22) * 18} r="1.3" fill="var(--accent)" />)}
-        </svg>
+      <div key={i} style={{ display: "grid", gridTemplateColumns: "0.8fr 1.2fr", gap: "0.8rem", flex: 1 }}>
+        <Card title="Supervised baseline" side={T.base} tone="base" focus={T.focus} />
+        <Card title="After PPO with the critics" side={T.ppo} tone="ppo" focus={T.focus} />
       </div>
     </div>
   );

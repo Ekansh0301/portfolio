@@ -17,7 +17,7 @@ npm run dev
 | --- | --- |
 | `src/data/content.ts` | All copy: profile, projects, publications, experience, skills, contact-form keys. |
 | `src/index.css` | Tokens (light and dark) and every style. Change `--accent` and the site follows. |
-| `src/components/Hero.tsx` | The opening, written as a screenplay. The cursor is the query vector: each word's opacity is its attention weight. |
+| `src/components/Hero.tsx` | The name page: every letter of EKANSH GOYAL is a tile that flips to reveal a project or paper. A spotlight walks along the name; hover or tap to take over. |
 | `src/components/Rail.tsx` | The scene index on the right edge. |
 | `src/lib/kv.ts` | The Dynamo-style cluster model behind the QuorumKV demo. |
 | `src/lib/lgsm.ts` | LGSM's forward pass (two streams, gate, fusion) over the film's beats. |
@@ -30,12 +30,12 @@ npm run dev
 Each shows one idea from the project and plays by itself. At most one or two controls.
 
 - **QuorumKV (`Ring`)**: the real cluster model (N=4, W=3, R=2 like the repo's defaults) under live traffic. Click nodes to crash them; hinted handoff and quorums keep it answering until too many are gone, and the counters stay honest.
-- **The Director LLM (`Critics`)**: the README's real generations. The same player action answered by the supervised Phi-2 baseline and by the PPO policy, with each critic's score and the intent-weighted reward computed live from the intent's weights.
-- **Vox (`Voice`)**: hold the button or Right Ctrl. Stage timings are the README's measurements; the risky command asks first.
+- **The Director LLM (`Critics`)**: where the supervised baseline sounds right and is quietly wrong. Four scenarios (an ignored action, a contradiction, a hallucination, amnesia) from the World Consistency critic's taxonomy and the PPO README's real generation pair, with the intent weights as bars, the offending phrase underlined, and a fuller PPO answer.
+- **Vox (`Voice`)**: a desktop that TARS drives with the repo's real tools and tiers. Eight scenarios (read the screen, search, trash with an approval dialog, timer, find files, volume, a read-only command, and `sudo` refused). Stage timings are the README's measurements.
 - **CryptoStack (`Cipher`)**: a map of the twenty primitives in their five phases with the reductions between them, and a live attack for seven of them, all running for real: Miller-Rabin vs Carmichael numbers, ECB leaking structure (AES-128 from the spec), bit-flipping CTR vs Encrypt-then-MAC, textbook RSA determinism, Håstad's broadcast attack via CRT, signature forgery, and a Diffie-Hellman man in the middle.
-- **Anemia Detection (`Eye`)**: one patient over three visits through the app's flow: guide box, quality gate (Laplacian sharpness and brightness, computed on pixels), conjunctiva segmentation, haemoglobin, severity, history. Segmenter is a colour threshold standing in for UNet++; Hb mapping is a toy calibration. The repository is private.
+- **Anemia Detection (`Eye`)**: the app's flow on a real photograph of the lower lid pulled down, with the red palpebral conjunctiva below the eye. The quality gate (Laplacian sharpness, brightness) and the Hb estimate read the real pixels; the mask is a colour threshold on those pixels standing in for UNet++; earlier visits are simulated by grading the conjunctiva. The repository is private.
 - **Distributed Storage (`Planes`)**: the Naming Server answers where a file is and steps out; bytes flow client to storage server directly. Click a storage server to drop it and bring it back.
-- **EMNLP paper (`Lgsm`)**: LGSM reading *Her* (2013) beat by beat. Each scene goes through the frozen-BERT stream, the linguistic-feature stream and the paper's scalar gate (α = 0.477, flat across that film), with the fusion arithmetic and the verdict shown, including a scene it misses (the paper's abstract-suppression failure). Gate value, feature directions and group differences are from the paper; per-scene values are illustrative and the beats are my summary of the film. **SemEval paper (`Density`)**: max-pool keyword spotting against mean-pool narrative density on the same post.
+- **EMNLP paper (`Lgsm`)**: LGSM reading *Inception* (2010) beat by beat through the paper's two streams and scalar gate, including a scene it misses (abstract suppression). Gate behaviour, feature directions and group differences are from the paper; per-scene values are illustrative and the beats are my summary of the film. **SemEval paper (`Density`)**: type any post; a transparent lexicon-and-slots scorer highlights the five narrative slots and predicts belief at the project's τ = 0.595. It illustrates the signal and is not the DeBERTa model.
 
 ## Notes
 
@@ -43,3 +43,7 @@ Each shows one idea from the project and plays by itself. At most one or two con
 - Pages scroll-snap on desktop (`proximity`, so it never fights the user) and stack naturally on small screens.
 - `prefers-reduced-motion` stops the transitions and the blinking caret.
 - The contact form posts to Web3Forms (or an `endpoint`) when configured, otherwise opens a `mailto:` draft.
+
+## Credits
+
+The anemia demo uses "Chlamydial-conjunctivitis.jpg" by Jonathan Trobe, M.D., University of Michigan Kellogg Eye Center, licensed CC BY 3.0 (Wikimedia Commons), cropped and with a derived segmentation mask. It shows an inflamed conjunctiva, used here for the lower-lid view only. To use your own clinical capture, replace `public/images/eye-lid.jpg` and `public/images/eye-lid-mask.png` (same size) and recalibrate `RATIO0` in `Eye.tsx`.

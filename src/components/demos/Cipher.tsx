@@ -37,8 +37,8 @@ const PRIMS: Prim[] = [
 const EDGES: [string, string][] = [["owf", "prf"], ["prf", "cpa"], ["prf", "mac"], ["cpa", "cca"], ["mac", "cca"], ["md", "crhf"], ["crhf", "hmac"], ["bday", "crhf"], ["hmac", "mac"], ["mr", "rsa"], ["dh", "eg"], ["eg", "ccapkc"], ["rsa", "crt"], ["rsa", "sig"], ["rsa", "ccapkc"], ["ot", "gates"], ["gates", "mpc"]];
 const ATTACKS = PRIMS.filter((p) => p.attack).map((p) => p.id);
 
-const PW = 100, PH = 21, CW = 112, TOP = 28, GAP = 27;
-const pos = (p: Prim) => ({ x: 6 + p.phase * CW, y: TOP + p.row * GAP });
+const PW = 128, PH = 29, CW = 142, TOP = 30, GAP = 38;
+const pos = (p: Prim) => ({ x: 4 + p.phase * CW, y: TOP + p.row * GAP });
 const byId = Object.fromEntries(PRIMS.map((p) => [p.id, p]));
 
 const short = (v: bigint, a = 8, z = 6) => { const s = v.toString(); return s.length > a + z + 1 ? `${s.slice(0, a)}…${s.slice(-z)}` : s; };
@@ -47,7 +47,7 @@ const enc = (s: string) => new TextEncoder().encode(s);
 const dec = (b: Uint8Array) => new TextDecoder("utf-8", { fatal: false }).decode(b);
 const cat = (...xs: Uint8Array[]) => Uint8Array.from(xs.flatMap((x) => [...x]));
 const Row = ({ k, children }: { k: string; children: React.ReactNode }) => (
-  <div style={{ display: "grid", gridTemplateColumns: "6.2rem 1fr", gap: 8, alignItems: "baseline" }} className="mono"><span className="dim" style={{ fontSize: "0.6rem" }}>{k}</span><span style={{ fontSize: "0.68rem", wordBreak: "break-all" }}>{children}</span></div>
+  <div style={{ display: "grid", gridTemplateColumns: "6.2rem 1fr", gap: 8, alignItems: "baseline" }} className="mono"><span className="dim" style={{ fontSize: "0.73rem" }}>{k}</span><span style={{ fontSize: "0.83rem", wordBreak: "break-all" }}>{children}</span></div>
 );
 
 /* ---------- Miller-Rabin vs Fermat on Carmichael numbers ---------- */
@@ -69,9 +69,9 @@ function MillerRabin() {
     <>
       <div className="row">{NS.map((v) => <button key={v} className={`sm ${n === v ? "on" : ""}`} onClick={() => setN(v)}>{v}</button>)}<span className="mono dim" style={{ marginLeft: 6 }}>= {fact}</span></div>
       <div style={{ display: "grid", gridTemplateColumns: "3rem 1fr 1fr", gap: "3px 10px" }} className="mono">
-        <span className="dim" style={{ fontSize: "0.58rem" }}>base</span><span className="dim" style={{ fontSize: "0.58rem" }}>Fermat test</span><span className="dim" style={{ fontSize: "0.58rem" }}>Miller-Rabin</span>
+        <span className="dim" style={{ fontSize: "0.71rem" }}>base</span><span className="dim" style={{ fontSize: "0.71rem" }}>Fermat test</span><span className="dim" style={{ fontSize: "0.71rem" }}>Miller-Rabin</span>
         {rows.map((r) => (
-          <div key={r.a} style={{ display: "contents", fontSize: "0.68rem" }}>
+          <div key={r.a} style={{ display: "contents", fontSize: "0.83rem" }}>
             <span>a={r.a}</span>
             <span className={r.fermat === "composite" ? "ok" : r.fermat === "prime?" && n !== 7919 ? "bad" : ""}>{r.fermat}</span>
             <span className={r.mr === "composite" ? "ok" : n === 7919 ? "" : "bad"}>{r.mr}</span>
@@ -106,7 +106,7 @@ function Modes() {
     paint(a.current, p); paint(b.current, ecb(p, key)); paint(c.current, ctr(p, key, rand(8)));
   }, [seed]);
   const cell = (ref: React.RefObject<HTMLCanvasElement | null>, t: string, s: string, hot?: boolean) => (
-    <div><canvas ref={ref} width={64} height={64} style={{ width: "100%", imageRendering: "pixelated", borderRadius: 6, border: `1px solid ${hot ? "var(--accent)" : "var(--rule)"}`, display: "block" }} /><div className="mono" style={{ marginTop: 3, color: hot ? "var(--accent)" : "var(--ink)" }}>{t}</div><div className="mono dim" style={{ fontSize: "0.58rem" }}>{s}</div></div>
+    <div><canvas ref={ref} width={64} height={64} style={{ width: "100%", imageRendering: "pixelated", borderRadius: 6, border: `1px solid ${hot ? "var(--accent)" : "var(--rule)"}`, display: "block" }} /><div className="mono" style={{ marginTop: 3, color: hot ? "var(--accent)" : "var(--ink)" }}>{t}</div><div className="mono dim" style={{ fontSize: "0.71rem" }}>{s}</div></div>
   );
   return (
     <>
@@ -133,7 +133,7 @@ function Cca() {
     const tag2 = hmac(mk, cat(nonce, ct2)).slice(0, 8);
     return { ct, ct2, p, cpa, accepted: tag2.every((v, i) => v === tag[i]) };
   }, [run]);
-  const bytes = (b: Uint8Array, mark = -1) => <span className="mono" style={{ fontSize: "0.68rem" }}>{[...b].map((v, i) => <span key={i} style={i === mark ? { color: "var(--accent)", fontWeight: 700, background: "color-mix(in srgb, var(--accent) 16%, transparent)" } : undefined}>{v.toString(16).padStart(2, "0")} </span>)}</span>;
+  const bytes = (b: Uint8Array, mark = -1) => <span className="mono" style={{ fontSize: "0.83rem" }}>{[...b].map((v, i) => <span key={i} style={i === mark ? { color: "var(--accent)", fontWeight: 700, background: "color-mix(in srgb, var(--accent) 16%, transparent)" } : undefined}>{v.toString(16).padStart(2, "0")} </span>)}</span>;
   return (
     <>
       <Row k="Alice sends">“PAY ALICE $100” encrypted with AES-CTR</Row>
@@ -173,12 +173,12 @@ function Rsa() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.7rem" }}>
         <div className="log" style={{ minHeight: 0 }}>
           <div className="dim">textbook RSA</div>
-          <div className="mono" style={{ fontSize: "0.64rem" }}>{h(d.t1)}</div><div className="mono" style={{ fontSize: "0.64rem" }}>{h(d.t2)}</div>
+          <div className="mono" style={{ fontSize: "0.78rem" }}>{h(d.t1)}</div><div className="mono" style={{ fontSize: "0.78rem" }}>{h(d.t2)}</div>
           <div className={same ? "bad" : "ok"}>{same ? "identical: Eve learns the two messages are equal" : "different"}</div>
         </div>
         <div className="log" style={{ minHeight: 0, borderColor: "var(--accent)" }}>
           <div className="dim">PKCS#1 v1.5 padding</div>
-          <div className="mono" style={{ fontSize: "0.64rem" }}>{h(d.p1)}</div><div className="mono" style={{ fontSize: "0.64rem" }}>{h(d.p2)}</div>
+          <div className="mono" style={{ fontSize: "0.78rem" }}>{h(d.p1)}</div><div className="mono" style={{ fontSize: "0.78rem" }}>{h(d.p2)}</div>
           <div className={d.p1 !== d.p2 ? "ok" : "bad"}>{d.p1 !== d.p2 ? `different, yet both decrypt to “${d.back}”` : "identical"}</div>
         </div>
       </div>
@@ -288,8 +288,8 @@ export default function Cipher() {
         <span className="mono dim">⚡ = has a working attack · click any</span>
       </div>
 
-      <svg viewBox="0 0 566 196" role="group" aria-label="Map of the twenty primitives and their reductions" className="cmap" style={{ maxHeight: 210 }}>
-        {PHASES.map((t, i) => <text key={t} x={6 + i * CW + 2} y="14" fontSize="8.5" style={{ fill: "var(--ink-3)", letterSpacing: "0.04em" }}>{t.toUpperCase()}</text>)}
+      <svg viewBox="0 0 716 250" role="group" aria-label="Map of the twenty primitives and their reductions" className="cmap" style={{ maxHeight: 300 }}>
+        {PHASES.map((t, i) => <text key={t} x={4 + i * CW + 2} y="16" fontSize="10.5" style={{ fill: "var(--ink-3)", letterSpacing: "0.04em" }}>{t.toUpperCase()}</text>)}
         {EDGES.map(([a, b]) => {
           const A = pos(byId[a]), B = pos(byId[b]);
           const hot = a === sel || b === sel;
@@ -302,9 +302,9 @@ export default function Cipher() {
           const on = p.id === sel, near = linked.has(p.id);
           return (
             <g key={p.id} role="button" tabIndex={0} aria-label={p.name} style={{ cursor: "pointer", outline: "none" }} onClick={() => { manual.current = true; setSel(p.id); }} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), (manual.current = true, setSel(p.id)))}>
-              <rect x={x} y={y} width={PW} height={PH} rx="6" fill={on ? "var(--accent)" : "var(--card)"} stroke={on ? "var(--accent)" : near ? "var(--accent)" : "var(--rule)"} strokeWidth={near || on ? 1.5 : 1} style={{ transition: "fill 0.25s" }} />
-              <text x={x + 8} y={y + 14} fontSize="9.5" style={{ fill: on ? "var(--accent-ink)" : "var(--ink)" }}>{p.name}</text>
-              {p.attack && <text x={x + PW - 12} y={y + 14.5} fontSize="9.5" style={{ fill: on ? "var(--accent-ink)" : "var(--accent)" }}>⚡</text>}
+              <rect x={x} y={y} width={PW} height={PH} rx="8" fill={on ? "var(--accent)" : "var(--card)"} stroke={on ? "var(--accent)" : near ? "var(--accent)" : "var(--rule)"} strokeWidth={near || on ? 1.5 : 1} style={{ transition: "fill 0.25s" }} />
+              <text x={x + 10} y={y + 19} fontSize="12.5" style={{ fill: on ? "var(--accent-ink)" : "var(--ink)" }}>{p.name}</text>
+              {p.attack && <text x={x + PW - 16} y={y + 19.5} fontSize="12.5" style={{ fill: on ? "var(--accent-ink)" : "var(--accent)" }}>⚡</text>}
             </g>
           );
         })}
@@ -312,8 +312,8 @@ export default function Cipher() {
 
       <div key={sel} className="cpanel" style={{ borderTop: "1px solid var(--rule)", paddingTop: "0.6rem", display: "grid", gap: "0.5rem" }}>
         <div>
-          <div className="mono acc" style={{ fontSize: "0.62rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>{PHASES[P.phase]} · {P.name}{ATTACK_TITLE[sel] ? ` · ${ATTACK_TITLE[sel]}` : ""}</div>
-          <div style={{ fontSize: "0.82rem", color: "var(--ink-2)", marginTop: 2 }}>{P.info}</div>
+          <div className="mono acc" style={{ fontSize: "0.76rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>{PHASES[P.phase]} · {P.name}{ATTACK_TITLE[sel] ? ` · ${ATTACK_TITLE[sel]}` : ""}</div>
+          <div style={{ fontSize: "1.00rem", color: "var(--ink-2)", marginTop: 2 }}>{P.info}</div>
         </div>
         {Panel ? <Panel /> : (
           <div className="log" style={{ minHeight: 0 }}>

@@ -11,7 +11,7 @@ import { ALPHA, BEATS, FILM, score } from "../../lib/lgsm";
 const S = BEATS.map(score);
 
 export default function Lgsm() {
-  const [i, setI] = useState(1);
+  const [i, setI] = useState(2);
   const manual = useRef(false);
   useEffect(() => {
     const id = window.setInterval(() => { if (!manual.current) setI((x) => (x + 1) % BEATS.length); }, 3600);
@@ -74,8 +74,8 @@ export default function Lgsm() {
           </div>
           <div style={{ border: "1px solid var(--rule)", borderRadius: 8, padding: "0.45rem 0.6rem", background: "var(--card)" }}>
             <div className="mono" style={{ fontSize: "0.6rem" }}>gate α = σ(W[h_sem ; h_ling] + b)</div>
-            <div className="mono" style={{ fontSize: "0.8rem", color: "var(--accent)", marginTop: 2 }}>α = {ALPHA.toFixed(3)}</div>
-            <div className="mono dim" style={{ fontSize: "0.56rem", marginTop: 2 }}>in {FILM.title} the paper finds it flat across the whole film</div>
+            <div className="mono" style={{ fontSize: "0.8rem", color: "var(--accent)", marginTop: 2 }}>α = {ALPHA.toFixed(2)}</div>
+            <div className="mono dim" style={{ fontSize: "0.56rem", marginTop: 2 }}>stable within a film (paper: 0.477 for “Her”)</div>
           </div>
         </div>
       </div>
@@ -83,7 +83,7 @@ export default function Lgsm() {
       {/* fusion and verdict */}
       <div style={{ borderTop: "1px solid var(--rule)", paddingTop: "0.6rem", display: "grid", gap: 6 }}>
         <div className="mono" style={{ fontSize: "0.68rem" }}>
-          fused = <span className="acc">{ALPHA.toFixed(3)}</span>·{s.ling.toFixed(2)} + <span className="acc">{(1 - ALPHA).toFixed(3)}</span>·{b.sem.toFixed(2)} = <b style={{ fontSize: "0.8rem" }}>{s.fused.toFixed(2)}</b>
+          fused = <span className="acc">{ALPHA.toFixed(2)}</span>·{s.ling.toFixed(2)} + <span className="acc">{(1 - ALPHA).toFixed(2)}</span>·{b.sem.toFixed(2)} = <b style={{ fontSize: "0.8rem" }}>{s.fused.toFixed(2)}</b>
         </div>
         <div style={{ position: "relative", height: 10, background: "var(--bg-2)", borderRadius: 5 }}>
           <div style={{ position: "absolute", inset: "0 auto 0 0", width: `${s.fused * 100}%`, background: s.pred ? "var(--accent)" : "var(--ink-3)", borderRadius: 5, transition: "width 0.5s var(--ease)" }} />
