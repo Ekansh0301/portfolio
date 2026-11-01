@@ -8,10 +8,10 @@ import { profile, scenes, socials } from "../data/content";
  * walks along the plate on its own; hover or tap any letter to take over.
  */
 const GH = "https://github.com/Ekansh0301/";
-type L = { ch: string; word: string; repo: string; line: string; demo?: string };
+type L = { ch: string; word: string; repo?: string; line: string; demo?: string; priv?: boolean };
 const ROWS: L[][] = [
   [
-    { ch: "E", word: "Evaluating", repo: "EMNLP_A4", line: "Can an LLM judge English to Hindi translation? An empirical study with adversarial tests." },
+    { ch: "E", word: "EMNLP", line: "Scene saliency in movie screenplays: a 2026 main-conference paper.", demo: "research" },
     { ch: "K", word: "Key-value", repo: "QuorumKV", line: "A masterless store that keeps answering through a partition.", demo: "systems" },
     { ch: "A", word: "Attention", repo: "sparse-moe-summarization", line: "A sparse mixture-of-experts transformer, written from scratch for summarization." },
     { ch: "N", word: "Narrative", repo: "Dropout-Squad", line: "A Dungeon Master fine-tuned with PPO by four critics.", demo: "systems" },
@@ -22,7 +22,7 @@ const ROWS: L[][] = [
     { ch: "G", word: "Galactic", repo: "galactic-glitch-hunters", line: "A Godot game that teaches children to fight gender bias with logic." },
     { ch: "O", word: "Offline", repo: "Voxd", line: "A voice assistant that runs on a 4 GB laptop GPU.", demo: "intelligence" },
     { ch: "Y", word: "Yao", repo: "CryptoStack", line: "Twenty cryptographic primitives from scratch, up to two-party computation.", demo: "intelligence" },
-    { ch: "A", word: "Address", repo: "XV6-and-C-Shell", line: "An xv6 kernel with lazy copy-on-write and custom scheduling, plus a C shell." },
+    { ch: "A", word: "Anemia", line: "Haemoglobin from a photo of the lower eyelid, on the phone.", demo: "applied", priv: true },
     { ch: "L", word: "LRU", repo: "Fault-Tolerant-Distributed-Storage-System", line: "The naming server's cache in my distributed file system: control plane and data plane, in C." },
   ],
 ];
@@ -53,7 +53,7 @@ export default function Hero({ id }: { id: string }) {
                   {row.map((l) => {
                     const idx = ++n, on = idx === active;
                     return (
-                      <button key={idx} className={`tile ${on ? "on" : ""}`} aria-label={`${l.ch}: ${l.word}, ${l.repo}. ${l.line}`}
+                      <button key={idx} className={`tile ${on ? "on" : ""}`} aria-label={`${l.ch}: ${l.word}${l.repo ? ", " + l.repo : ""}. ${l.line}`}
                         onPointerEnter={() => { hover.current = true; setActive(idx); }}
                         onFocus={() => { hover.current = true; setActive(idx); }}
                         onClick={() => { hover.current = true; setActive(idx); }}>
@@ -69,10 +69,10 @@ export default function Hero({ id }: { id: string }) {
             </div>
 
             <div className="tile-cap" key={active} aria-live="polite">
-              <span className="mono acc">{cur.ch} · {cur.word} · {cur.repo}</span>
+              <span className="mono acc">{cur.ch} · {cur.word}{cur.repo ? ` · ${cur.repo}` : cur.priv ? " · private repository" : " · paper"}</span>
               <span>{cur.line}</span>
               <span className="row" style={{ gap: "1.1rem", marginTop: "0.2rem" }}>
-                <a className="link" href={GH + cur.repo} target="_blank" rel="noreferrer">GitHub ↗</a>
+                {cur.repo && <a className="link" href={GH + cur.repo} target="_blank" rel="noreferrer">GitHub ↗</a>}
                 {cur.demo && <a className="link" href={`#${cur.demo}`}>see the demo ↓</a>}
               </span>
             </div>

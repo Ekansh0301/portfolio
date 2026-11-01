@@ -185,12 +185,11 @@ export type SkillGroup = {
 
 export const skillGroups: SkillGroup[] = [
   { label: "Languages", items: ["Python", "C", "C++", "TypeScript", "JavaScript", "SQL", "Bash", "GDScript"] },
-  { label: "Data & ML", items: ["PyTorch", "NumPy", "Pandas", "Scikit-learn", "OpenCV", "HuggingFace Transformers", "PPO", "QLoRA", "SHAP"] },
+  { label: "ML & Research", items: ["PyTorch", "NumPy", "Pandas", "Scikit-learn", "OpenCV", "HuggingFace Transformers", "PPO", "QLoRA", "SHAP", "Empirical Methods in NLP", "Statistical Methods in AI", "Psycholinguistics", "LLM-as-a-Judge", "Ablation studies"] },
   { label: "Models", items: ["DeBERTa", "BERT", "Phi-2", "Whisper", "Qwen", "UNet++", "YOLO", "PaddleOCR", "ONNX Runtime", "TFLite", "Ollama"] },
   { label: "Systems & Infra", items: ["Distributed Systems", "Multi-threading", "POSIX", "TCP/IP", "Linux/Unix", "Raft", "Redis", "Docker", "Git"] },
   { label: "Software Engineering", items: ["System Design", "REST APIs", "Microservices", "Test-Driven Development", "CI/CD", "FastAPI", "MCP"] },
   { label: "Web & Product", items: ["React", "Next.js", "Node.js", "Express", "React Native", "Expo", "MongoDB", "Streamlit", "PyQt6", "Godot"] },
-  { label: "Research", items: ["Empirical Methods in NLP", "Statistical Methods in AI", "Psycholinguistics", "LLM-as-a-Judge", "Ablation studies"] },
   { label: "Coursework", items: ["Data Structures & Algorithms", "Algorithm Analysis & Design", "Operating Systems & Networks", "Design & Analysis of Software Systems", "Data & Applications", "Computer Systems Organization", "Probability & Statistics", "Discrete Structures"] },
 ];
 

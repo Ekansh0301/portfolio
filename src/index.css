@@ -289,12 +289,13 @@ footer.foot .navbtn { font-size: 0.78rem; }
 .xpcard p { font-size: 0.88rem; }
 .xpcard li { font-size: 0.84rem; }
 .xp-grid { gap: 1rem; }
-.tools-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.9rem; }
+.tools-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.9rem; }
+.toolcard.wide { grid-column: 1 / -1; }
 .toolcard { padding: 0.95rem 1rem 1.05rem; min-height: 0; gap: 0.65rem; border-radius: 12px; }
 .toolcard h3 { font-size: 1.05rem; }
 .toolcard .chips { gap: 0.32rem; }
 .toolcard .chip { font-size: 0.7rem; padding: 0.22rem 0.55rem; }
-@media (max-width: 999px) { .tools-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 999px) { .tools-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .toolcard.wide { grid-column: 1 / -1; } }
 @media (max-width: 560px) { .tools-grid { grid-template-columns: 1fr; } .stats { grid-template-columns: 1fr 1fr 1fr; } }
 
 /* ---------- awards in the intro, fuller experience, waterfall ---------- */

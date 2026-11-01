@@ -2,24 +2,25 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
  * The anaemia app's flow on a real photograph of the lower lid pulled down, the
- * red palpebral conjunctiva below the eye (see the credit under the demo). Capture in the guide box, quality gate (Laplacian
- * sharpness and brightness, computed on the pixels), segmentation of the
- * palpebral conjunctiva, haemoglobin, severity, and a history across visits.
- * What is simulated, and said on the page: I have no clinical photo of a
- * pale conjunctiva, so visits 1 and 2 grade the conjunctiva pixels of this
- * photo towards pale. The mask is a colour threshold on the real pixels (a
- * stand-in for UNet++), and the Hb mapping is a toy calibration.
+ * red palpebral conjunctiva below the eye (credit in the page footer). Capture
+ * in the guide box, quality gate (Laplacian sharpness and a brightness
+ * histogram, computed on the pixels), segmentation of the conjunctiva,
+ * haemoglobin, WHO severity, and a history across visits. Simulated, and said
+ * so in the README: I have no clinical photo of a pale conjunctiva, so visits
+ * 1 and 2 grade the conjunctiva pixels of this photo towards pale. The mask is
+ * a colour threshold on the real pixels (a stand-in for UNet++), and the Hb
+ * mapping is a toy calibration.
  */
-const W = 360, H = 251, BLUR_MIN = 100, LUM: [number, number] = [70, 215];
+const W = 360, H = 251, BLUR_MIN = 100, LUM: [number, number] = [70, 215], BINS = 32;
 const PALE = [246, 232, 228];
 const VISITS = [
-  { label: "Visit 1", k: 0.8, bad: { blur: 4, light: 1 } },
-  { label: "Visit 2", k: 0.45, bad: null },
-  { label: "Visit 3", k: 0, bad: null },
+  { label: "Visit 1", date: "Jan", k: 0.8, bad: { blur: 4, light: 1 } },
+  { label: "Visit 2", date: "Feb", k: 0.45, bad: null },
+  { label: "Visit 3", date: "Mar", k: 0, bad: null },
 ];
 const RATIO0 = 0.8522; // mean green/red under the mask in the untouched photo
 
-type Assets = { base: ImageData; mask: Uint8Array; soft: Uint8ClampedArray };
+type Assets = { base: ImageData; mask: Uint8Array; soft: Uint8ClampedArray; cover: number };
 function load(src: string) { return new Promise<HTMLImageElement>((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = src; }); }
 
 async function loadAssets(): Promise<Assets> {
@@ -34,8 +35,9 @@ async function loadAssets(): Promise<Assets> {
   for (let i = 0; i < W * H; i++) soft[i] = sd[i * 4];
   x.clearRect(0, 0, W, H); x.drawImage(m, 0, 0, W, H);
   const hd = x.getImageData(0, 0, W, H).data, mask = new Uint8Array(W * H);
-  for (let i = 0; i < W * H; i++) mask[i] = hd[i * 4] > 128 ? 1 : 0;
-  return { base, mask, soft };
+  let n = 0;
+  for (let i = 0; i < W * H; i++) { mask[i] = hd[i * 4] > 128 ? 1 : 0; n += mask[i]; }
+  return { base, mask, soft, cover: n / (W * H) };
 }
 
 /** Grade the conjunctiva pixels towards pale; everything else is the untouched photograph. */
@@ -52,9 +54,13 @@ function graded(a: Assets, k: number) {
 
 function analyse(img: ImageData, mask: Uint8Array) {
   const { data } = img;
-  const lum = new Float32Array(W * H);
+  const lum = new Float32Array(W * H), hist = new Array(BINS).fill(0);
   let sum = 0;
-  for (let i = 0; i < W * H; i++) { lum[i] = 0.299 * data[i * 4] + 0.587 * data[i * 4 + 1] + 0.114 * data[i * 4 + 2]; sum += lum[i]; }
+  for (let i = 0; i < W * H; i++) {
+    lum[i] = 0.299 * data[i * 4] + 0.587 * data[i * 4 + 1] + 0.114 * data[i * 4 + 2];
+    sum += lum[i];
+    hist[Math.min(BINS - 1, Math.floor((lum[i] / 256) * BINS))]++;
+  }
   const meanL = sum / (W * H);
   let s = 0, s2 = 0, n = 0; // variance of the Laplacian: the standard cheap sharpness score
   for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
@@ -64,12 +70,18 @@ function analyse(img: ImageData, mask: Uint8Array) {
   const sharp = s2 / n - (s / n) ** 2;
   let cnt = 0, rs = 0;
   for (let i = 0; i < W * H; i++) if (mask[i]) { cnt++; rs += data[i * 4 + 1] / Math.max(data[i * 4], 1); }
-  const hb = cnt ? Math.max(4, Math.min(15.5, 12.9 - 93.5 * (rs / cnt - RATIO0))) : null;
-  return { sharp, meanL, pass: sharp >= BLUR_MIN && meanL >= LUM[0] && meanL <= LUM[1], hb };
+  const ratio = cnt ? rs / cnt : null;
+  const hb = ratio === null ? null : Math.max(4, Math.min(15.5, 12.9 - 93.5 * (ratio - RATIO0)));
+  return { sharp, meanL, hist, pass: sharp >= BLUR_MIN && meanL >= LUM[0] && meanL <= LUM[1], hb, redness: ratio === null ? null : 1 - ratio };
 }
+type Metrics = ReturnType<typeof analyse>;
+
 // WHO cut-offs for non-pregnant adult women, g/dL.
-const severity = (hb: number): [string, string] => (hb >= 12 ? ["Normal", "var(--ok)"] : hb >= 11 ? ["Mild", "var(--accent)"] : hb >= 8 ? ["Moderate", "var(--accent)"] : ["Severe", "var(--bad)"]);
-const yOf = (hb: number) => 4 + (1 - (hb - 4) / 11.5) * 34;
+const ZONES: [number, number, string, string][] = [[4, 8, "Severe", "var(--bad)"], [8, 11, "Moderate", "var(--accent)"], [11, 12, "Mild", "#d6a21c"], [12, 16, "Normal", "var(--ok)"]];
+const severity = (hb: number) => ZONES.find((z) => hb < z[1]) ?? ZONES[3];
+const pctHb = (hb: number) => ((Math.min(16, Math.max(4, hb)) - 4) / 12) * 100;
+const yOf = (hb: number) => 4 + (1 - (hb - 4) / 12) * 34;
+const cap = { fontSize: "0.58rem", textTransform: "uppercase" as const, letterSpacing: "0.08em" };
 
 export default function Eye() {
   const cv = useRef<HTMLCanvasElement>(null);
@@ -80,7 +92,7 @@ export default function Eye() {
   const [visit, setVisit] = useState(0);
   const [step, setStep] = useState(0);           // 1 capture, 2 gate, 3 segment, 4 result
   const [retake, setRetake] = useState(false);
-  const [m, setM] = useState<{ sharp: number; meanL: number; pass: boolean; hb: number | null } | null>(null);
+  const [m, setM] = useState<Metrics | null>(null);
   const [history, setHistory] = useState<(number | null)[]>([null, null, null]);
 
   useEffect(() => { let live = true; loadAssets().then((a) => { if (live) { assets.current = a; setReady(true); } }); return () => { live = false; }; }, []);
@@ -152,54 +164,86 @@ export default function Eye() {
   const next = () => { const v = (visit + 1) % VISITS.length; if (v === 0) setHistory([null, null, null]); setVisit(v); run(v); };
   const hb = step >= 4 && m?.hb != null ? m.hb : null;
   const sev = hb !== null ? severity(hb) : null;
-  const tick = (n: number, label: string, detail: string) => (
+  const hmax = m ? Math.max(...m.hist) : 1;
+  const stepHead = (n: number, label: string, detail: string) => (
     <div style={{ display: "grid", gridTemplateColumns: "1rem 1fr", gap: 8, alignItems: "start", opacity: step >= n ? 1 : 0.3, transition: "opacity 0.4s" }}>
       <span className="mono" style={{ color: step >= n ? "var(--accent)" : "var(--ink-3)" }}>{step > n || (step === n && n === 4) ? "✓" : step === n ? "…" : "·"}</span>
-      <span><span className="mono" style={{ color: "var(--ink)", fontSize: "0.78rem" }}>{label}</span><br /><span className="mono dim" style={{ fontSize: "0.64rem" }}>{detail}</span></span>
+      <span><span className="mono" style={{ color: "var(--ink)", fontSize: "0.78rem" }}>{label}</span><br /><span className="mono dim" style={{ fontSize: "0.62rem" }}>{detail}</span></span>
     </div>
   );
-  const pts = history.map((h, i) => ({ h, x: 10 + i * 30 })).filter((p): p is { h: number; x: number } => p.h !== null);
+  const pts = history.map((h, i) => ({ h, i, x: 10 + i * 30 })).filter((p): p is { h: number; i: number; x: number } => p.h !== null);
 
   return (
     <div className="stage">
       <div className="stage-h">
-        <span className="mono">one patient · {VISITS[visit].label} of 3</span>
+        <span className="mono">patient #0142 · 34 · F · {VISITS[visit].label} of 3</span>
         <button className="sm" onClick={next}>{visit === VISITS.length - 1 ? "start over" : "next visit →"}</button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.25fr) minmax(0,1fr)", gap: "0.9rem", alignItems: "center" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.15fr) minmax(0,1fr)", gap: "0.9rem", alignItems: "start" }}>
         <div style={{ position: "relative", lineHeight: 0 }}>
           <canvas ref={cv} width={W} height={H} style={{ width: "100%", height: "auto", display: "block", borderRadius: 8, background: "var(--bg-2)" }} aria-label="Photograph of an eye with the lower lid pulled down, showing the red conjunctiva" />
           <div style={{ position: "absolute", left: "3%", top: "8%", width: "94%", height: "86%", border: "1.5px dashed rgba(255,255,255,0.85)", borderRadius: 8, pointerEvents: "none" }} />
-          {retake && <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", background: "rgba(10,10,12,0.62)", borderRadius: 8 }}><span className="mono bad" style={{ textAlign: "center", lineHeight: 1.5, color: "#ff9d8f" }}>too blurry<br />please retake</span></div>}
+          {retake && <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", background: "rgba(10,10,12,0.62)", borderRadius: 8 }}><span className="mono" style={{ textAlign: "center", lineHeight: 1.5, color: "#ff9d8f" }}>too blurry<br />please retake</span></div>}
           {!ready && <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}><span className="mono dim">loading photo…</span></div>}
         </div>
-        <div style={{ display: "grid", gap: "0.5rem" }}>
-          {tick(1, "capture", "inside the guide box")}
-          {tick(2, "quality gate", m ? `sharp ${m.sharp.toFixed(0)}/${BLUR_MIN} · light ${m.meanL.toFixed(0)}` : "blur + brightness")}
-          {tick(3, "segment", "palpebral conjunctiva")}
-          {tick(4, "haemoglobin", "estimate + severity")}
+
+        <div style={{ display: "grid", gap: "0.65rem" }}>
+          {stepHead(1, "capture", "inside the guide box")}
+          <div>
+            {stepHead(2, "quality gate", m ? (m.pass ? "sharp and well lit: accepted" : "rejected: retake the photo") : "blur and brightness")}
+            <div style={{ marginLeft: 24, marginTop: 6, display: "grid", gap: 7, opacity: step >= 2 ? 1 : 0.25, transition: "opacity 0.4s" }}>
+              <div>
+                <div className="mono dim" style={{ ...cap, display: "flex", justifyContent: "space-between" }}><span>sharpness</span><span>{m ? Math.round(m.sharp) : "–"} / {BLUR_MIN}</span></div>
+                <div style={{ position: "relative", height: 7, background: "var(--bg-2)", borderRadius: 4, marginTop: 3 }}>
+                  <div style={{ position: "absolute", inset: "0 auto 0 0", width: `${m ? Math.min(100, (m.sharp / 300) * 100) : 0}%`, background: m && m.sharp >= BLUR_MIN ? "var(--ok)" : "var(--bad)", borderRadius: 4, transition: "width 0.4s" }} />
+                  <div style={{ position: "absolute", left: `${(BLUR_MIN / 300) * 100}%`, top: -2, bottom: -2, width: 1.5, background: "var(--ink)" }} />
+                </div>
+              </div>
+              <div>
+                <div className="mono dim" style={{ ...cap, display: "flex", justifyContent: "space-between" }}><span>brightness histogram</span><span>mean {m ? Math.round(m.meanL) : "–"}</span></div>
+                <svg viewBox={`0 0 ${BINS} 10`} preserveAspectRatio="none" style={{ width: "100%", height: 30, display: "block", marginTop: 3 }} aria-label="Brightness histogram of the capture">
+                  <rect x={(LUM[0] / 256) * BINS} width={((LUM[1] - LUM[0]) / 256) * BINS} y="0" height="10" fill="color-mix(in srgb, var(--ok) 14%, transparent)" />
+                  {m?.hist.map((h, i) => <rect key={i} x={i + 0.1} width="0.8" y={10 - (h / hmax) * 10} height={(h / hmax) * 10} fill="var(--ink-3)" />)}
+                </svg>
+              </div>
+            </div>
+          </div>
+          {stepHead(3, "segment", step >= 3 && m?.redness != null && assets.current ? `palpebral conjunctiva · ${(assets.current.cover * 100).toFixed(0)}% of the frame · redness ${(m.redness * 100).toFixed(0)}%` : "palpebral conjunctiva")}
+          {stepHead(4, "haemoglobin", "estimate, then WHO class")}
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,0.8fr) minmax(0,1fr)", gap: "0.8rem", alignItems: "center", border: "1px solid var(--rule)", borderRadius: 8, padding: "0.6rem 0.75rem", background: "var(--card)" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,0.9fr) minmax(0,1.3fr) minmax(0,1fr)", gap: "0.9rem", alignItems: "center", border: "1px solid var(--rule)", borderRadius: 10, padding: "0.75rem 0.9rem", background: "var(--card)" }}>
         <div>
-          <div className="mono dim" style={{ fontSize: "0.58rem", marginBottom: 3 }}>ANALYZED IMAGE</div>
-          <canvas ref={roi} width={220} height={110} style={{ width: "100%", height: "auto", background: "var(--bg-2)", borderRadius: 4, display: "block" }} aria-label="Extracted conjunctiva region" />
-        </div>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ fontFamily: "var(--serif)", fontSize: "1.7rem", lineHeight: 1 }}>{hb !== null ? hb.toFixed(1) : "—"}<span className="mono dim" style={{ fontSize: "0.62rem" }}> g/dL</span></div>
-          <div className="mono" style={{ marginTop: 4, color: sev ? sev[1] : "var(--ink-3)", fontWeight: 600 }}>{sev ? sev[0] : "waiting"}</div>
+          <div className="mono dim" style={{ ...cap, marginBottom: 4 }}>analyzed image</div>
+          <canvas ref={roi} width={220} height={110} style={{ width: "100%", height: "auto", background: "var(--bg-2)", borderRadius: 6, display: "block" }} aria-label="Extracted conjunctiva region" />
         </div>
         <div>
-          <div className="mono dim" style={{ fontSize: "0.58rem", marginBottom: 3 }}>PATIENT HISTORY</div>
-          <svg viewBox="0 0 80 42" style={{ height: 52, display: "block", width: "100%" }} aria-label="Haemoglobin across visits">
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+            <span style={{ fontFamily: "var(--serif)", fontSize: "2.1rem", lineHeight: 1 }}>{hb !== null ? hb.toFixed(1) : "—"}</span>
+            <span className="mono dim" style={{ fontSize: "0.64rem" }}>g/dL</span>
+            <span className="mono" style={{ marginLeft: "auto", padding: "0.15rem 0.55rem", borderRadius: 99, fontSize: "0.7rem", fontWeight: 600, color: sev ? sev[3] : "var(--ink-3)", border: `1px solid ${sev ? sev[3] : "var(--rule)"}` }}>{sev ? sev[2] : "waiting"}</span>
+          </div>
+          <div style={{ position: "relative", marginTop: 12 }}>
+            <div style={{ display: "flex", height: 8, borderRadius: 4, overflow: "hidden" }}>
+              {ZONES.map((z) => <div key={z[2]} style={{ width: `${((z[1] - z[0]) / 12) * 100}%`, background: z[3], opacity: sev && sev[2] === z[2] ? 1 : 0.35, transition: "opacity 0.4s" }} />)}
+            </div>
+            {hb !== null && <div style={{ position: "absolute", left: `${pctHb(hb)}%`, top: -4, width: 2, height: 16, background: "var(--ink)", transition: "left 0.5s var(--ease)" }} />}
+            <div className="mono dim" style={{ display: "flex", justifyContent: "space-between", fontSize: "0.54rem", marginTop: 3 }}><span>4</span><span>8</span><span>11</span><span>12</span><span>16</span></div>
+          </div>
+        </div>
+        <div>
+          <div className="mono dim" style={{ ...cap, marginBottom: 4 }}>patient history</div>
+          <svg viewBox="0 0 80 46" style={{ height: 66, display: "block", width: "100%" }} aria-label="Haemoglobin across visits">
             {[8, 11, 12].map((z) => <line key={z} x1="0" x2="80" y1={yOf(z)} y2={yOf(z)} stroke="var(--rule)" strokeDasharray="2 2" strokeWidth="0.6" />)}
             {pts.length > 1 && <polyline points={pts.map((p) => `${p.x},${yOf(p.h)}`).join(" ")} fill="none" stroke="var(--accent)" strokeWidth="1.3" />}
-            {pts.map((p) => <circle key={p.x} cx={p.x} cy={yOf(p.h)} r="2" fill="var(--accent)" />)}
+            {pts.map((p) => <g key={p.i}><circle cx={p.x} cy={yOf(p.h)} r="2" fill="var(--accent)" /><text x={p.x} y={yOf(p.h) - 4} textAnchor="middle" fontSize="4.6" style={{ fill: "var(--ink-2)" }}>{p.h.toFixed(1)}</text></g>)}
+            {VISITS.map((v, i) => <text key={v.label} x={10 + i * 30} y="45" textAnchor="middle" fontSize="4" style={{ fill: "var(--ink-3)" }}>{v.date}</text>)}
           </svg>
         </div>
       </div>
+
     </div>
   );
 }

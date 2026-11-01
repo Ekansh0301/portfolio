@@ -46,22 +46,23 @@ export default function Lgsm() {
         <div style={{ fontSize: "0.82rem", color: "var(--ink-2)", marginTop: 2 }}>{b.blurb}</div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.35fr) minmax(0,1fr)", gap: "0.9rem" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.5fr) minmax(0,1fr)", gap: "1rem" }}>
         {/* linguistic stream */}
         <div>
           <div className="mono dim" style={{ fontSize: "0.58rem", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5 }}>linguistic stream · feature pushes</div>
-          <div style={{ display: "grid", gap: 6 }}>
+          <div style={{ display: "grid", gap: 5 }}>
             {s.contrib.map((c) => (
-              <div key={c.k} style={{ display: "grid", gridTemplateColumns: "8.6rem 1fr 2.2rem", gap: 6, alignItems: "center" }} className="mono">
-                <span style={{ fontSize: "0.62rem", color: "var(--ink-2)" }} title={c.note}>{c.label}</span>
+              <div key={c.k} style={{ display: "grid", gridTemplateColumns: "10.2rem 1fr 2.3rem", gap: 6, alignItems: "center" }} className="mono">
+                <span style={{ fontSize: "0.62rem", color: "var(--ink-2)", whiteSpace: "nowrap" }} title={`${c.group}: ${c.note}`}><i style={{ fontStyle: "normal", color: c.paper ? "var(--accent)" : "transparent" }}>●</i> {c.label}</span>
                 <div style={{ position: "relative", height: 8, background: "var(--bg-2)", borderRadius: 4 }}>
                   <div style={{ position: "absolute", left: "50%", top: -2, bottom: -2, width: 1, background: "var(--ink-3)" }} />
-                  <div style={{ position: "absolute", top: 0, bottom: 0, borderRadius: 4, background: c.c >= 0 ? "var(--accent)" : "var(--ink-3)", left: c.c >= 0 ? "50%" : `${50 + Math.max(-50, c.c * 28)}%`, width: `${Math.min(50, Math.abs(c.c) * 28)}%`, transition: "all 0.45s var(--ease)" }} />
+                  <div style={{ position: "absolute", top: 0, bottom: 0, borderRadius: 4, background: c.c >= 0 ? "var(--accent)" : "var(--ink-3)", left: c.c >= 0 ? "50%" : `${50 - Math.min(50, Math.abs(c.c) * 80)}%`, width: `${Math.min(50, Math.abs(c.c) * 80)}%`, transition: "all 0.45s var(--ease)" }} />
                 </div>
                 <span style={{ fontSize: "0.6rem", textAlign: "right", color: c.c >= 0 ? "var(--accent)" : "var(--ink-3)" }}>{c.c >= 0 ? "+" : ""}{c.c.toFixed(2)}</span>
               </div>
             ))}
           </div>
+          <div className="mono dim" style={{ fontSize: "0.56rem", marginTop: 5 }}><i style={{ fontStyle: "normal", color: "var(--accent)" }}>●</i> direction reported in the paper · other groups: illustrative values</div>
           <div className="mono" style={{ fontSize: "0.62rem", marginTop: 6 }}><span className="dim">h_ling →</span> <b>{s.ling.toFixed(2)}</b></div>
         </div>
 
