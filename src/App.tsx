@@ -14,7 +14,7 @@ export default function App() {
       <Rail scenes={scenes} />
       <main>
         <Hero id="opening" />
-        <WorkPage id="systems" scene={2} title={<>Systems that <em>survive</em></>} items={[projects[0], projects[1]]} first={1} />
+        <WorkPage id="systems" scene={2} title={<>Systems that <em>survive</em></>} items={[projects[0], projects[1]]} first={1} cols="minmax(0,0.8fr) minmax(0,1.2fr)" />
         <WorkPage id="intelligence" scene={3} title={<>Things that <em>listen</em> and <em>resist</em></>} items={[projects[2], projects[3]]} first={3} alt />
         <WorkPage id="applied" scene={4} title={<>Models in the <em>field</em></>} items={[projects[4], projects[5]]} first={5} />
         <Research id="research" scene={5} />

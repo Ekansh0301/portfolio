@@ -98,8 +98,8 @@ export default function Contact({ id, scene }: { id: string; scene: number }) {
         <footer className="foot mono dim">
           <span>© {new Date().getFullYear()} Ekansh Goyal</span>
           <span style={{ display: "flex", gap: "1rem" }}>
-            <a href="https://github.com/Ekansh0301" target="_blank" rel="noreferrer">GitHub</a>
-            <a href="https://linkedin.com/in/ekanshgoyal-cs" target="_blank" rel="noreferrer">LinkedIn</a>
+            <a className="navbtn solid" href="https://github.com/Ekansh0301" target="_blank" rel="noreferrer">GitHub ↗</a>
+            <a className="navbtn" href="https://linkedin.com/in/ekanshgoyal-cs" target="_blank" rel="noreferrer">LinkedIn ↗</a>
           </span>
         </footer>
       </div>

@@ -17,7 +17,7 @@ const VISITS = [
   { label: "Visit 2", k: 0.45, bad: null },
   { label: "Visit 3", k: 0, bad: null },
 ];
-const RATIO0 = 0.623; // mean green/red under the mask in the untouched photo
+const RATIO0 = 0.646; // mean green/red under the mask in the untouched photo
 
 type Assets = { base: ImageData; mask: Uint8Array; soft: Uint8ClampedArray };
 function load(src: string) { return new Promise<HTMLImageElement>((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = src; }); }
@@ -64,7 +64,7 @@ function analyse(img: ImageData, mask: Uint8Array) {
   const sharp = s2 / n - (s / n) ** 2;
   let cnt = 0, rs = 0;
   for (let i = 0; i < W * H; i++) if (mask[i]) { cnt++; rs += data[i * 4 + 1] / Math.max(data[i * 4], 1); }
-  const hb = cnt ? Math.max(4, Math.min(15.5, 12.9 - 38 * (rs / cnt - RATIO0))) : null;
+  const hb = cnt ? Math.max(4, Math.min(15.5, 12.9 - 42.7 * (rs / cnt - RATIO0))) : null;
   return { sharp, meanL, pass: sharp >= BLUR_MIN && meanL >= LUM[0] && meanL <= LUM[1], hb };
 }
 // WHO cut-offs for non-pregnant adult women, g/dL.
@@ -200,7 +200,7 @@ export default function Eye() {
           </svg>
         </div>
       </div>
-      <div className="mono dim" style={{ fontSize: "0.58rem" }}>Photo: J. Trobe, MD, Univ. of Michigan Kellogg Eye Center, CC BY 3.0 (Wikimedia Commons). Earlier visits simulated by grading.</div>
+      <div className="mono dim" style={{ fontSize: "0.58rem" }}>Photo: J. Trobe, MD, Univ. of Michigan Kellogg Eye Center, CC BY 3.0 (Wikimedia Commons), cropped and colour-softened. Earlier visits simulated by grading.</div>
     </div>
   );
 }

@@ -38,14 +38,14 @@ export function Card({ n, title, metric, txt, chips, href, priv, children }: {
   );
 }
 
-export function WorkPage({ id, scene, title, items, first, alt }: {
-  id: string; scene: number; title: React.ReactNode; items: Project[]; first: number; alt?: boolean;
+export function WorkPage({ id, scene, title, items, first, alt, cols }: {
+  id: string; scene: number; title: React.ReactNode; items: Project[]; first: number; alt?: boolean; cols?: string;
 }) {
   return (
     <section id={id} className={`page ${alt ? "alt" : ""}`}>
       <div className="wrap">
         <Slate scene={scene} title={title} note={`projects ${first}–${first + 1} of 6`} />
-        <div className="pair">
+        <div className="pair" style={cols ? ({ "--cols": cols } as React.CSSProperties) : undefined}>
           {items.map((p, i) => {
             const Demo = demos[p.demo];
             return (

@@ -17,7 +17,7 @@ npm run dev
 | --- | --- |
 | `src/data/content.ts` | All copy: profile, projects, publications, experience, skills, contact-form keys. |
 | `src/index.css` | Tokens (light and dark) and every style. Change `--accent` and the site follows. |
-| `src/components/Hero.tsx` | The name page: every letter of EKANSH GOYAL is a tile that flips to reveal a project or paper. A spotlight walks along the name; hover or tap to take over. |
+| `src/components/Hero.tsx` | The name page: a nameplate where every letter of EKANSH GOYAL is a tile for one of my public repositories (a dot marks the ones that also have a demo here). It flips to show the project with a GitHub link; a spotlight walks along the plate, and hover or tap takes over. |
 | `src/components/Rail.tsx` | The scene index on the right edge. |
 | `src/lib/kv.ts` | The Dynamo-style cluster model behind the QuorumKV demo. |
 | `src/lib/lgsm.ts` | LGSM's forward pass (two streams, gate, fusion) over the film's beats. |
@@ -46,4 +46,4 @@ Each shows one idea from the project and plays by itself. At most one or two con
 
 ## Credits
 
-The anemia demo uses "Chlamydial-conjunctivitis.jpg" by Jonathan Trobe, M.D., University of Michigan Kellogg Eye Center, licensed CC BY 3.0 (Wikimedia Commons), cropped and with a derived segmentation mask. It shows an inflamed conjunctiva, used here for the lower-lid view only. To use your own clinical capture, replace `public/images/eye-lid.jpg` and `public/images/eye-lid-mask.png` (same size) and recalibrate `RATIO0` in `Eye.tsx`.
+The anemia demo uses "Chlamydial-conjunctivitis.jpg" by Jonathan Trobe, M.D., University of Michigan Kellogg Eye Center, licensed CC BY 3.0 (Wikimedia Commons), cropped, smoothed and colour-softened, with a derived segmentation mask. The original shows an inflamed conjunctiva; it is used here for the lower-lid view only. To use your own clinical capture, replace `public/images/eye-lid.jpg` and `public/images/eye-lid-mask.png` (same size) and recalibrate `RATIO0` in `Eye.tsx`.

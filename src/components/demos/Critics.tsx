@@ -25,28 +25,28 @@ const TURNS: Turn[] = [
     tab: "Ignored action", trap: "causal gap", focus: "C", intent: "ACTION",
     state: ["tavern, evening", "goblins in the far corner"],
     player: "I cast Fireball at the group of goblins in the corner!",
-    base: { text: "The tavern erupts in chaos as patrons dive for cover.", flag: "The tavern erupts in chaos as patrons dive for cover.", rows: [{ k: "N", v: 0.61 }, { k: "C", v: 0.09 }, { k: "W", v: 0.54 }], verdict: "Never resolves the spell: no damage, no goblins." },
-    ppo: { text: "Your Fireball streaks into the corner and blooms into a sphere of flame. The goblins shriek as it engulfs them. Roll 8d6 fire damage. Two are incinerated outright; the third staggers clear, badly burned.", rows: [{ k: "N", v: 0.68 }, { k: "C", v: 0.94 }, { k: "W", v: 0.89 }], verdict: "Resolves the action with consequences.", gains: ["resolves the spell", "damage dice (8d6)", "names who survives"] },
+    base: { text: "The tavern erupts in chaos as patrons dive for cover. The bartender shouts something about his establishment. You notice the wooden beams overhead are old and weathered.", flag: "The tavern erupts in chaos as patrons dive for cover.", rows: [{ k: "N", v: 0.61 }, { k: "C", v: 0.09 }, { k: "W", v: 0.54 }], verdict: "Never resolves the spell: no damage, no goblins." },
+    ppo: { text: "Your Fireball streaks into the corner and blooms into a sphere of flame. The goblins shriek as it engulfs them. Roll 8d6 fire damage. Two are incinerated outright; the third staggers clear, badly burned, smoke curling off his cloak. What do you do next?", rows: [{ k: "N", v: 0.68 }, { k: "C", v: 0.94 }, { k: "W", v: 0.89 }], verdict: "Resolves the action with consequences.", gains: ["resolves the spell", "damage dice (8d6)", "names who survives"] },
   },
   {
     tab: "Locked door", trap: "contradiction", focus: "W", intent: "ACTION",
     state: ["ancient door: LOCKED", "key: not found"],
     player: "I push on the door.",
-    base: { text: "The door gives way with a groan of old hinges, revealing a dark corridor.", flag: "The door gives way with a groan of old hinges", rows: [{ k: "W", v: 0.0 }], verdict: "Door state changed from locked to open with no unlock action." },
+    base: { text: "The door gives way with a groan of old hinges, revealing a dark corridor that smells of damp stone. Somewhere ahead, water drips.", flag: "The door gives way with a groan of old hinges", rows: [{ k: "W", v: 0.0 }], verdict: "Door state changed from locked to open with no unlock action." },
     ppo: { text: "The door doesn't budge. The iron lock holds fast, and fresh scratches around the keyhole suggest someone else has tried before you. Something small and brass glints in the dust by the hinge.", rows: [{ k: "W", v: 1.0 }], verdict: "Consistent with the established state.", gains: ["keeps the lock", "adds a clue", "points toward the key"] },
   },
   {
     tab: "Quiet tavern", trap: "hallucination", focus: "W", intent: "EXPLORE",
     state: ["tavern: quiet, dimly lit", "a few patrons, scattered"],
     player: "I look around the room.",
-    base: { text: "Two merchants haggle by the fire while a pair of guards share a table near the door. A bard tunes his lute beside three scholars.", flag: "Two merchants haggle by the fire while a pair of guards share a table near the door. A bard tunes his lute beside three scholars", rows: [{ k: "W", v: 0.3 }], verdict: "Eight new people in a room established as quiet." },
+    base: { text: "Two merchants haggle by the fire while a pair of guards share a table near the door. A bard tunes his lute beside three scholars deep in debate, and a cook hauls out a tray of bread.", flag: "Two merchants haggle by the fire while a pair of guards share a table near the door. A bard tunes his lute beside three scholars", rows: [{ k: "W", v: 0.3 }], verdict: "Eight new people in a room established as quiet." },
     ppo: { text: "The tavern is nearly empty. A hooded traveler sits alone in the corner nursing an ale, and glances up when you turn. The only other sound is the crackle of the hearth.", rows: [{ k: "W", v: 1.0 }], verdict: "One new entity: within the acceptable range.", gains: ["one new entity only", "keeps the mood quiet", "gives you a hook"] },
   },
   {
     tab: "Forgotten name", trap: "amnesia", focus: "W", intent: "DIALOGUE",
     state: ["innkeeper: Gregor Thorngage", "halfling, proprietor"],
     player: "I ask the innkeeper about local rumors.",
-    base: { text: "The innkeeper leans close. “Lights in the old quarry,” he says, though you realise you never caught his name.", flag: "though you realise you never caught his name", rows: [{ k: "W", v: 0.5 }], verdict: "He introduced himself as Gregor Thorngage; the name is lost." },
+    base: { text: "The innkeeper leans close and lowers his voice. “Lights in the old quarry, friend. Folk won't go near it after dark,” he says, though you realise you never caught his name.", flag: "though you realise you never caught his name", rows: [{ k: "W", v: 0.5 }], verdict: "He introduced himself as Gregor Thorngage; the name is lost." },
     ppo: { text: "Gregor Thorngage leans across the bar and lowers his voice. “Lights in the old quarry, friend. Folk won't go near it after dark.” He wipes the same glass twice, eyes on the door.", rows: [{ k: "W", v: 1.0 }], verdict: "Keeps the NPC's name and voice.", gains: ["Gregor, by name", "rumor in his own voice", "a hook: the quarry"] },
   },
 ];
@@ -62,7 +62,7 @@ function Card({ title, side, tone, focus }: { title: string; side: Side; tone: "
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.55rem", border: `1px solid ${good ? "var(--accent)" : "var(--rule)"}`, borderRadius: 10, padding: "0.75rem 0.85rem", background: "var(--card)", minWidth: 0 }}>
       <div className="mono" style={{ fontSize: "0.64rem", letterSpacing: "0.08em", textTransform: "uppercase", color: good ? "var(--accent)" : "var(--ink-3)" }}>{title}</div>
-      <p style={{ margin: 0, fontFamily: "var(--serif)", fontSize: good ? "1rem" : "0.95rem", lineHeight: 1.5, flex: 1, color: good ? "var(--ink)" : "var(--ink-2)" }}><Flagged text={side.text} flag={side.flag} /></p>
+      <p style={{ margin: 0, fontFamily: "var(--serif)", fontSize: "0.9rem", lineHeight: 1.45, flex: 1, color: good ? "var(--ink)" : "var(--ink-2)" }}><Flagged text={side.text} flag={side.flag} /></p>
       {side.gains && <div className="chips">{side.gains.map((g) => <span key={g} className="chip" style={{ background: "color-mix(in srgb, var(--ok) 14%, transparent)", color: "var(--ok)" }}>+ {g}</span>)}</div>}
       <div style={{ display: "grid", gap: 5 }}>
         {side.rows.map((r) => (
@@ -109,11 +109,11 @@ export default function Critics() {
         </div>
         <div>
           <div className="mono dim" style={{ fontSize: "0.6rem", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5 }}>intent <b className="acc">{T.intent}</b> → critic weights</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 14px" }}>
+          <div style={{ display: "grid", gap: 4 }}>
             {(Object.keys(NAMES) as K[]).map((k) => (
-              <div key={k} className="mono" style={{ display: "grid", gridTemplateColumns: "3.9rem 1fr 2rem", gap: 6, alignItems: "center" }}>
+              <div key={k} className="mono" style={{ display: "grid", gridTemplateColumns: "4.4rem 1fr 2.1rem", gap: 8, alignItems: "center" }}>
                 <span style={{ fontSize: "0.64rem", color: w[k] === top ? "var(--accent)" : "var(--ink-2)" }}>{NAMES[k]}</span>
-                <div className="bar" style={{ height: 8 }}><i style={{ width: `${(w[k] / 0.4) * 100}%`, background: w[k] === top ? "var(--accent)" : "var(--ink-3)", transition: "width 0.5s var(--ease)" }} /></div>
+                <div className="bar" style={{ height: 7 }}><i style={{ width: `${(w[k] / 0.4) * 100}%`, background: w[k] === top ? "var(--accent)" : "var(--ink-3)", transition: "width 0.5s var(--ease)" }} /></div>
                 <span style={{ fontSize: "0.66rem", textAlign: "right" }}>{Math.round(w[k] * 100)}%</span>
               </div>
             ))}
@@ -121,7 +121,7 @@ export default function Critics() {
         </div>
       </div>
 
-      <div key={i} style={{ display: "grid", gridTemplateColumns: "0.8fr 1.2fr", gap: "0.8rem", flex: 1 }}>
+      <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.8rem", flex: 1 }}>
         <Card title="Supervised baseline" side={T.base} tone="base" focus={T.focus} />
         <Card title="After PPO with the critics" side={T.ppo} tone="ppo" focus={T.focus} />
       </div>

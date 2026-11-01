@@ -96,9 +96,6 @@ export default function Density() {
         </div>
       </div>
 
-      <div className="mono dim" style={{ fontSize: "0.6rem", lineHeight: 1.5 }}>
-        A transparent lexicon-and-slots scorer standing in for the model. The submitted system is DeBERTa-v3-large with mean pooling over the whole post: 0.829 macro F1 on dev, 0.750 on the official test. Believers average 6.53 markers per post against 4.35, and tell a full five-slot story 41.3% of the time against 22.2%.
-      </div>
     </div>
   );
 }
