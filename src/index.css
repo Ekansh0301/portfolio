@@ -199,3 +199,15 @@ footer.foot { display: flex; justify-content: space-between; gap: 1rem; flex-wra
   .script p { margin-bottom: 1.1rem; }
   .titlepage { gap: 1.1rem; }
 }
+.beat { height: 34px; }
+@media (min-width: 1000px) and (max-height: 820px) {
+  .resp { font-size: 0.74rem !important; line-height: 1.36 !important; }
+  .beat { height: 24px; }
+}
+@media (min-width: 1000px) and (max-height: 820px) {
+  .cmap { max-height: 138px !important; }
+  .cpanel { gap: 0.35rem !important; padding-top: 0.4rem !important; }
+}
+.cpanel { min-height: 232px; align-content: start; }
+@media (min-width: 1000px) and (max-height: 820px) { .cpanel { min-height: 200px; } }
+@media (min-width: 1000px) and (max-height: 820px) { .modes-grid { max-width: 270px !important; } }

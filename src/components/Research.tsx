@@ -1,10 +1,10 @@
 import { publications } from "../data/content";
 import { Card, Slate } from "./Pages";
-import Gate from "./demos/Gate";
+import Lgsm from "./demos/Lgsm";
 import Density from "./demos/Density";
 
 export default function Research({ id, scene }: { id: string; scene: number }) {
-  const demos = [<Gate key="g" />, <Density key="d" />];
+  const demos = [<Lgsm key="g" />, <Density key="d" />];
   return (
     <section id={id} className="page alt">
       <div className="wrap">
