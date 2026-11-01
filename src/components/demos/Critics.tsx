@@ -5,8 +5,8 @@ import { useEffect, useRef, useState } from "react";
  * quietly wrong. Scenarios come from the project's READMEs: the Fireball pair
  * is a real generation pair with real critic scores (PPO/README.md); the three
  * world-state traps (contradiction, hallucination, amnesia) are the World
- * Consistency critic's own taxonomy and scoring (0.0 / 0.3 / 0.5, consistent
- * = 1.0). Intent weights are the README's. The wording of the three
+ * Consistency critic's own taxonomy and baseline scoring (0.0 / 0.3 / 0.5);
+ * the PPO scores for those three are illustrative (high, not perfect). Intent weights are the README's. The wording of the three
  * world-state responses is illustrative.
  */
 type K = "N" | "C" | "W" | "Ch";
@@ -33,21 +33,21 @@ const TURNS: Turn[] = [
     state: ["ancient door: LOCKED", "key: not found"],
     player: "I push on the door.",
     base: { text: "The door gives way with a groan of old hinges, revealing a dark corridor that smells of damp stone. Somewhere ahead, water drips.", flag: "The door gives way with a groan of old hinges", rows: [{ k: "W", v: 0.0 }], chips: ["opens a locked door", "no key used"] },
-    ppo: { text: "The door doesn't budge. The iron lock holds fast, and fresh scratches around the keyhole suggest someone else has tried before you. Something small and brass glints in the dust by the hinge.", rows: [{ k: "W", v: 1.0 }], chips: ["keeps the lock", "adds a clue", "points toward the key"] },
+    ppo: { text: "The door doesn't budge. The iron lock holds fast, and fresh scratches around the keyhole suggest someone else has tried before you. Something small and brass glints in the dust by the hinge.", rows: [{ k: "W", v: 0.94 }], chips: ["keeps the lock", "adds a clue", "points toward the key"] },
   },
   {
     tab: "Quiet tavern", trap: "hallucination", focus: "W", intent: "EXPLORE",
     state: ["tavern: quiet, dimly lit", "a few patrons, scattered"],
     player: "I look around the room.",
     base: { text: "Two merchants haggle by the fire while a pair of guards share a table near the door. A bard tunes his lute beside three scholars deep in debate, and a cook hauls out a tray of bread.", flag: "Two merchants haggle by the fire while a pair of guards share a table near the door. A bard tunes his lute beside three scholars", rows: [{ k: "W", v: 0.3 }], chips: ["eight new people", "breaks the quiet mood"] },
-    ppo: { text: "The tavern is nearly empty. A hooded traveler sits alone in the corner nursing an ale, and glances up when you turn. The only other sound is the crackle of the hearth.", rows: [{ k: "W", v: 1.0 }], chips: ["one new entity only", "keeps the mood quiet", "gives you a hook"] },
+    ppo: { text: "The tavern is nearly empty. A hooded traveler sits alone in the corner nursing an ale, and glances up when you turn. The only other sound is the crackle of the hearth.", rows: [{ k: "W", v: 0.91 }], chips: ["one new entity only", "keeps the mood quiet", "gives you a hook"] },
   },
   {
     tab: "Forgotten name", trap: "amnesia", focus: "W", intent: "DIALOGUE",
     state: ["innkeeper: Gregor Thorngage", "halfling, proprietor"],
     player: "I ask the innkeeper about local rumors.",
     base: { text: "The innkeeper leans close and lowers his voice. “Lights in the old quarry, friend. Folk won't go near it after dark,” he says, though you realise you never caught his name.", flag: "though you realise you never caught his name", rows: [{ k: "W", v: 0.5 }], chips: ["forgets Gregor's name", "loses his voice"] },
-    ppo: { text: "Gregor Thorngage leans across the bar and lowers his voice. “Lights in the old quarry, friend. Folk won't go near it after dark.” He wipes the same glass twice, eyes on the door.", rows: [{ k: "W", v: 1.0 }], chips: ["Gregor, by name", "rumor in his own voice", "a hook: the quarry"] },
+    ppo: { text: "Gregor Thorngage leans across the bar and lowers his voice. “Lights in the old quarry, friend. Folk won't go near it after dark.” He wipes the same glass twice, eyes on the door.", rows: [{ k: "W", v: 0.96 }], chips: ["Gregor, by name", "rumor in his own voice", "a hook: the quarry"] },
   },
 ];
 

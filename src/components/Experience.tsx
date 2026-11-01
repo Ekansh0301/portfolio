@@ -1,10 +1,10 @@
-import { experience } from "../data/content";
+import { education, experience } from "../data/content";
 import { Slate } from "./Pages";
 
 /** Where I have worked: a timeline of three roles, most recent first. */
 export default function Experience({ id, scene }: { id: string; scene: number }) {
   return (
-    <section id={id} className="page alt">
+    <section id={id} className="page alt compact">
       <div className="wrap">
         <Slate scene={scene} title={<>Where I've <em>worked</em></>} note="most recent first" />
         <div className="xp-line" aria-hidden>
@@ -22,6 +22,10 @@ export default function Experience({ id, scene }: { id: string; scene: number })
             </article>
           ))}
         </div>
+        <article className="xpcard edu">
+          <div><span className="mono acc">{education.period}</span><h3 className="org">{education.school}</h3></div>
+          <div><p>{education.degree}</p><p className="mono dim" style={{ fontSize: "0.7rem", marginTop: "0.35rem" }}>{education.line}</p></div>
+        </article>
       </div>
     </section>
   );

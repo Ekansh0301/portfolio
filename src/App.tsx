@@ -3,7 +3,6 @@ import Rail from "./components/Rail";
 import Hero from "./components/Hero";
 import { WorkPage } from "./components/Pages";
 import Research from "./components/Research";
-import Achievements from "./components/Achievements";
 import Experience from "./components/Experience";
 import Tools from "./components/Tools";
 import Contact from "./components/Contact";
@@ -20,10 +19,9 @@ export default function App() {
         <WorkPage id="intelligence" scene={3} title={<>Things that <em>listen</em> and <em>resist</em></>} items={[projects[2], projects[3]]} first={3} alt />
         <WorkPage id="applied" scene={4} title={<>Models in the <em>field</em></>} items={[projects[4], projects[5]]} first={5} />
         <Research id="research" scene={5} />
-        <Achievements id="achievements" scene={6} />
-        <Experience id="experience" scene={7} />
-        <Tools id="tools" scene={8} />
-        <Contact id="contact" scene={9} />
+        <Experience id="experience" scene={6} />
+        <Tools id="tools" scene={7} />
+        <Contact id="contact" scene={8} />
       </main>
     </>
   );

@@ -45,7 +45,7 @@ export default function Futures() {
   const cum: number[] = [0];
   res.bridge.forEach((b) => cum.push(cum[cum.length - 1] + b.value));
   const top = Math.max(...cum, res.mean, 1), bot = Math.min(...cum, 0, res.mean);
-  const y = (v: number) => 8 + ((top - v) / (top - bot || 1)) * 84;
+  const y = (v: number) => 12 + ((top - v) / (top - bot || 1)) * 74;
 
   return (
     <div className="stage">
@@ -88,20 +88,21 @@ export default function Futures() {
 
         {view === "why" && (<>
           <div className="mono dim" style={label}>value bridge · cause by cause, adding up to the difference</div>
-          <svg viewBox="0 0 120 100" style={{ width: "100%", height: 170, display: "block" }} role="img" aria-label="Waterfall of the exchange's advantage by cause">
-            <line x1="0" x2="120" y1={y(0)} y2={y(0)} stroke="var(--ink-3)" strokeWidth="0.4" strokeDasharray="1.5 1.5" />
-            {res.bridge.map((b, i) => {
-              const a0 = cum[i], a1 = cum[i + 1];
-              return <g key={b.label}>
-                <rect x={i * 19 + 3} width="14" y={Math.min(y(a0), y(a1))} height={Math.max(0.8, Math.abs(y(a0) - y(a1)))} rx="1" fill={b.value >= 0 ? "var(--ok)" : "var(--bad)"} style={{ transition: "all 0.5s var(--ease)" }} />
-                <text x={i * 19 + 10} y={Math.min(y(a0), y(a1)) - 2} textAnchor="middle" fontSize="4.2" style={{ fill: b.value >= 0 ? "var(--ok)" : "var(--bad)" }}>{k(b.value)}</text>
-              </g>;
+          <div className="wf">
+            {[...res.bridge.map((b, i) => ({ label: b.label, a0: cum[i], a1: cum[i + 1], v: b.value, total: false })), { label: "= difference", a0: 0, a1: res.mean, v: res.mean, total: true }].map((c) => {
+              const t = Math.min(y(c.a0), y(c.a1)), h = Math.max(1.2, Math.abs(y(c.a0) - y(c.a1)));
+              const color = c.total ? "var(--accent)" : c.v >= 0 ? "var(--ok)" : "var(--bad)";
+              return (
+                <div className="wf-col" key={c.label}>
+                  <div className="wf-plot">
+                    <div className="wf-zero" style={{ top: `${y(0)}%` }} />
+                    <div className="wf-bar" style={{ top: `${t}%`, height: `${h}%`, background: color }} />
+                    <span className="wf-val" style={{ top: `calc(${t}% - 1.15rem)`, color, fontWeight: c.total ? 700 : 500 }}>{k(c.v)}</span>
+                  </div>
+                  <span className="wf-name" style={{ color: c.total ? "var(--accent)" : "var(--ink-3)" }}>{c.label}</span>
+                </div>
+              );
             })}
-            <rect x={5 * 19 + 3} width="14" y={Math.min(y(0), y(res.mean))} height={Math.max(0.8, Math.abs(y(0) - y(res.mean)))} rx="1" fill="var(--accent)" style={{ transition: "all 0.5s var(--ease)" }} />
-            <text x={5 * 19 + 10} y={Math.min(y(0), y(res.mean)) - 2} textAnchor="middle" fontSize="4.2" fontWeight="700" style={{ fill: "var(--accent)" }}>{k(res.mean)}</text>
-          </svg>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 4 }} className="mono">
-            {[...res.bridge.map((b) => b.label), "= difference"].map((l, i) => <span key={l} style={{ fontSize: "0.58rem", textAlign: "center", color: i === 5 ? "var(--accent)" : "var(--ink-3)", lineHeight: 1.2 }}>{l}</span>)}
           </div>
         </>)}
 

@@ -94,6 +94,10 @@ export default function Hero({ id }: { id: string }) {
               <div><b>1st</b><span>prize<br />LPL WealthX 2026</span></div>
               <div><b>8.21</b><span>CGPA<br />dual degree</span></div>
             </div>
+            <div className="awards">
+              <span><i>★</i> Dean's List</span>
+              <span><i>★</i> Research List Award · 2025-26</span>
+            </div>
             <p className="mono dim" style={{ margin: 0, fontSize: "0.68rem" }}>LTRC · IIIT Hyderabad · B.Tech CS + MS by Research, Computational Linguistics</p>
           </div>
         </div>

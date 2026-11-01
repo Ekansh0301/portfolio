@@ -147,6 +147,7 @@ export const experience = [
       "First author, SemEval-2026 conspiracy-belief paper",
       "Led the EMNLP 2026 scene-saliency paper (+16% F1)",
       "Reproducible experiment tooling: 40% faster iteration",
+      "TA, Computational Linguistics II (commended)",
     ],
     tags: ["PyTorch", "Transformers", "SHAP"],
   },
@@ -201,17 +202,16 @@ export const scenes = [
   { id: "intelligence", label: "Voice & crypto" },
   { id: "applied", label: "Applied" },
   { id: "research", label: "Research" },
-  { id: "achievements", label: "Recognition" },
   { id: "experience", label: "Experience" },
   { id: "tools", label: "Tools" },
   { id: "contact", label: "Contact" },
 ] as const;
 
-export const achievements = [
-  { big: "1st", title: "First prize, LPL WealthX 2026", line: "Foresight, with Team Random." },
-  { big: "EMNLP", title: "Main-conference paper, 2026", line: "Scene saliency in movie screenplays." },
-  { big: "SemEval", title: "Sole-author system paper, 2026", line: "Task 10: 0.750 macro F1 on the official test." },
-  { big: "2025-26", title: "Research List Award", line: "Recipient, 2025-26." },
-  { big: "TA", title: "Teaching Assistant", line: "Computational Linguistics II, with formal commendation." },
-  { big: "8.21", title: "CGPA, dual degree", line: "B.Tech in CS and MS by Research in Computational Linguistics." },
-] as const;
+
+
+export const education = {
+  period: "Aug 2023 - May 2028",
+  school: "IIIT Hyderabad",
+  degree: "Dual degree: B.Tech in Computer Science + MS by Research in Computational Linguistics",
+  line: "CGPA 8.21 · Dean's List · Research List Award 2025-26 · Undergraduate researcher at LTRC",
+};
