@@ -1,6 +1,6 @@
 # Ekansh Goyal, Portfolio
 
-A reel of scenes, because the research is about reading screenplays. Eight screens, two projects per screen, and every project carries a model of its core idea that really computes. Vite + React 19 + TypeScript. No animation libraries.
+A reel of scenes, because the research is about reading screenplays. Eight scenes: an opening, three project screens (two projects each), the papers, where I have worked, what I build with, and contact. Every project and paper carries a model of its core idea that really computes. Vite + React 19 + TypeScript. No animation libraries.
 
 ## Run
 
@@ -15,17 +15,33 @@ npm run dev
 
 | Path | What it is |
 | --- | --- |
-| `src/data/content.ts` | All copy: profile, projects, publications, experience, skills, contact-form keys. |
+| `src/data/content.ts` | **All copy**: profile, projects, publications, experience and education, skills, scenes, contact-form keys. Edit this, not the components. |
 | `src/index.css` | Tokens (light and dark) and every style. Change `--accent` and the site follows. |
-| `src/components/Experience.tsx`, `Tools.tsx` | Where I have worked (a three-role timeline plus education) and what I build with (six grouped cards and a full-width coursework strip, from the resume and projects), each a compact screen. All copy is in `src/data/content.ts`. |
-| `src/components/Hero.tsx` | The name page, with the intro card (headline, pitch, three facts, and the Dean's List and Research List Award badges). Every letter of EKANSH GOYAL is a tile for one of my public repositories It flips to show the project with a GitHub link, and a demo link where one exists; a spotlight walks along the name, and hover or tap takes over. |
-| `src/components/Rail.tsx` | The scene index on the right edge. |
+| `src/App.tsx` | The eight scenes in order. |
+| `src/components/Hero.tsx` | The name page: the plate of letter tiles, the intro card (headline, pitch, three facts, Dean's List and Research List Award badges) and the scene strip. |
+| `src/components/Nav.tsx`, `Rail.tsx` | Top bar (Research, Contact, GitHub, theme toggle) and the scene index on the right edge. |
+| `src/components/Pages.tsx` | Shared layout: the scene header (`Slate`), the project `Card`, and `WorkPage` (two projects per screen). |
+| `src/components/Research.tsx` | The two papers, each with a demo (`Lgsm`, `Density`). |
+| `src/components/Experience.tsx`, `Tools.tsx` | Where I have worked (three-role timeline plus an education strip) and what I build with (six grouped cards and a full-width coursework strip). Both are compact screens. |
+| `src/components/Contact.tsx` | The form (Web3Forms or `mailto:` fallback), the latest GitHub pushes (live), and the footer with the photo credit. |
+| `src/components/demos/*` | One demo per project and paper (see below). |
 | `src/lib/kv.ts` | The Dynamo-style cluster model behind the QuorumKV demo. |
-| `src/lib/futures.ts` | The paired Monte Carlo, value bridge and hash-chained file behind the Foresight demo. |
-| `src/lib/lgsm.ts` | LGSM's forward pass (two streams, gate, fusion) over the film's beats. |
-| `src/lib/rsa.ts`, `src/lib/sha256.ts` | Big-integer RSA, Miller-Rabin, CRT, SHA-256 and HMAC for the CryptoStack attacks. |
-| `src/lib/aes.ts` | AES-128 from the spec (ECB and CTR), checked against the NIST/FIPS-197 vectors. |
-| `src/components/demos/*` | One demo per project and paper. |
+| `src/lib/aes.ts`, `rsa.ts`, `sha256.ts` | AES-128 from the spec, big-integer RSA with Miller-Rabin and CRT, SHA-256 and HMAC, checked against NIST, FIPS-197 and RFC 4231 vectors. Used by the CryptoStack attacks. |
+| `src/lib/lgsm.ts` | LGSM's forward pass (two streams, scalar gate, fusion) over the film's beats. |
+| `src/lib/futures.ts` | The paired Monte Carlo, value bridge, break-even search, market monitor and hash-chained file behind the Foresight demo. |
+| `public/images/eye-lid.jpg`, `eye-lid-mask.png` | The anemia demo's photo and its segmentation mask (same size). |
+
+## The name plate
+
+Every letter of EKANSH GOYAL is a flip tile. It shows the project, a GitHub link when the repo is public, and a "see the demo" link when the project has a demo here. A spotlight walks along the plate; hover or tap takes over. The mapping lives in `ROWS` in `Hero.tsx`:
+
+| E | K | A | N | S | H |
+| --- | --- | --- | --- | --- | --- |
+| EMNLP paper (no repo) | QuorumKV | sparse-moe-summarization | Dropout-Squad | conspiracy-belief-detection | Dr.Pixels |
+
+| G | O | Y | A | L |
+| --- | --- | --- | --- | --- |
+| galactic-glitch-hunters | Voxd | CryptoStack | Anemia (private repo) | Fault-Tolerant-Distributed-Storage-System |
 
 ## The demos
 
@@ -39,13 +55,29 @@ Each shows one idea from the project and plays by itself. At most one or two con
 - **Foresight (`Futures`)**: first prize at LPL WealthX 2026. Four views on a small illustrative model (the mechanisms are the project's, the numbers are not its engine's). *Head-to-head*: a recommendation and its alternative on the same 10,000 futures, with sliders for market return and surrender charge and the point where the answer flips. *Why*: a full-width waterfall that adds up exactly to the difference. *Replay*: a hash-chained Best-Interest File you can replay (identical to the dollar) or tamper with (the chain breaks at the edited line). *Monitor*: drag a market fall and a fictional book re-ranks by whose advice flips. The repository is private, so the card links to the public demo video.
 - **EMNLP paper (`Lgsm`)**: LGSM reading *Inception* (2010) beat by beat through the paper's two streams and scalar gate, with nine of the paper's feature groups (central characters, third-person pronouns, BERT surprisal, readability, dialogue density, RST depth, TextRank centrality, emotional volatility, plot shift). A dot marks the four whose direction the paper reports; the other values are illustrative. It includes a scene it misses (abstract suppression). Gate behaviour and group differences are from the paper; the beats are my summary of the film. **SemEval paper (`Density`)**: type any post; a transparent lexicon-and-slots scorer highlights the five narrative slots and predicts belief at the project's τ = 0.595. It illustrates the signal and is not the DeBERTa model.
 
+## What is real and what is illustrative
+
+| Demo | Real | Illustrative or simulated |
+| --- | --- | --- |
+| QuorumKV | The cluster model (consistent hashing, N/R/W quorums, vector clocks, hinted handoff) and its counters. | The traffic. |
+| The Director | Intent weights, the Fireball generation pair and its critic scores (PPO README), the World Consistency taxonomy and the baseline scores 0.0 / 0.3 / 0.5. | The wording of the three world-state answers and their PPO scores (high, not perfect). |
+| Vox | Tool names and tiers (TOOLS.md), stage timings (README). | The desktop and the replies. |
+| CryptoStack | Every attack runs: AES, RSA, SHA-256, HMAC, Miller-Rabin, CRT. | Nothing; the primitive map is the README's. |
+| Anemia | The photo, the quality gate and histogram, the mask, the redness and the Hb read-out are computed from the pixels. | Visits 1 and 2 (the conjunctiva is graded paler), the colour-threshold mask standing in for UNet++, and the Hb calibration. |
+| Foresight | The mechanisms: paired futures, an exact bridge, a hash chain, a market monitor. | The model and every number. It is not the project's engine. |
+| LGSM | The architecture, the gate behaviour, and the directions of four features (paper). | Per-scene feature values, the other five feature groups' values, and the film beats (my summary of *Inception*). |
+| Truth Gradient | The five-slot schema and dataset statistics. | The lexicon scorer; it is not the DeBERTa model. |
+
 ## Notes
 
 - Theme is stored in `localStorage`, defaults to the OS setting, and is applied before paint by an inline script in `index.html`.
 - Pages scroll-snap on desktop (`proximity`, so it never fights the user) and stack naturally on small screens.
 - `prefers-reduced-motion` stops the transitions and the blinking caret.
-- The contact form posts to Web3Forms (or an `endpoint`) when configured, otherwise opens a `mailto:` draft.
+- The contact form posts to Web3Forms (or an `endpoint`) when configured (`contactForm` in `content.ts`), otherwise opens a `mailto:` draft.
+- The "latest pushes" on the contact screen are fetched from the GitHub API at load; unauthenticated calls are rate-limited, and the strip simply hides if the request fails.
+- Screens fit one viewport at 1440x900; Applied (Anemia and Foresight) and Research run slightly taller because the demos use the room.
+- If the dev server ever shows a blank page after a large file edit, restart it: Vite can cache an empty read of a file written in one go.
 
 ## Credits
 
-The anemia demo uses "Chlamydial-conjunctivitis.jpg" by Jonathan Trobe, M.D., University of Michigan Kellogg Eye Center, licensed CC BY 3.0 (Wikimedia Commons), reframed, smoothed and colour-softened (calmer colours, lifted shadows, muted glare), with a derived segmentation mask. The original shows an inflamed conjunctiva; it is used here for the lower-lid view only. To use your own clinical capture, replace `public/images/eye-lid.jpg` and `public/images/eye-lid-mask.png` (same size) and recalibrate `RATIO0` in `Eye.tsx`.
+The anemia demo uses "Chlamydial-conjunctivitis.jpg" by Jonathan Trobe, M.D., University of Michigan Kellogg Eye Center, licensed CC BY 3.0 (Wikimedia Commons), reframed, smoothed and colour-softened (calmer colours, lifted shadows, muted glare), with a derived segmentation mask. The original shows an inflamed conjunctiva; it is used here for the lower-lid view only. The credit is also shown in the site footer, as the licence requires. To use your own clinical capture, replace `public/images/eye-lid.jpg` and `public/images/eye-lid-mask.png` (same size), then set `W`, `H` and `RATIO0` and recalibrate the Hb mapping in `Eye.tsx`.
