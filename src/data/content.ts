@@ -12,15 +12,6 @@ export const profile = {
 } as const;
 
 /**
- * Sections that can be switched off without touching any component.
- * Set a flag to false and the section stops rendering; set it back to true
- * and it returns exactly as it was.
- */
-export const sections = {
-  philosophy: true,
-};
-
-/**
  * Contact form delivery. Fill in ONE of these and the form starts sending for
  * real; leave both empty and it falls back to opening a mail draft, which is
  * not a delivery mechanism you should rely on.
@@ -47,8 +38,8 @@ export type Project = {
   stack: string[];
   href: string;
   metric: string;
-  accent: "ember" | "orange" | "steel" | "violet";
-  kind: "ring" | "critics" | "voice" | "cipher" | "leaf" | "planes";
+  demo: "ring" | "critics" | "voice" | "cipher" | "leaf" | "planes";
+  hint: string;
 };
 
 export const projects: Project[] = [
@@ -59,8 +50,8 @@ export const projects: Project[] = [
     stack: ["Python", "Redis", "Gossip"],
     href: "https://github.com/Ekansh0301/QuorumKV",
     metric: "Survives node failure",
-    accent: "ember",
-    kind: "ring",
+    demo: "ring",
+    hint: "Kill a node, then write a key.",
   },
   {
     title: "The Director LLM",
@@ -69,8 +60,8 @@ export const projects: Project[] = [
     stack: ["PyTorch", "PPO", "QLoRA"],
     href: "https://github.com/Ekansh0301/Dropout-Squad",
     metric: "+48.3% over supervised baseline",
-    accent: "violet",
-    kind: "critics",
+    demo: "critics",
+    hint: "Pick the player's intent.",
   },
   {
     title: "Vox",
@@ -79,8 +70,8 @@ export const projects: Project[] = [
     stack: ["Ollama", "Whisper", "Piper"],
     href: "https://github.com/Ekansh0301/Voxd",
     metric: "Fully offline, no API keys",
-    accent: "orange",
-    kind: "voice",
+    demo: "voice",
+    hint: "Replay one voice command.",
   },
   {
     title: "CryptoStack",
@@ -89,8 +80,8 @@ export const projects: Project[] = [
     stack: ["FastAPI", "React", "Cryptography"],
     href: "https://github.com/Ekansh0301/CryptoStack",
     metric: "20 primitives, stdlib only",
-    accent: "steel",
-    kind: "cipher",
+    demo: "cipher",
+    hint: "Flip one bit of the input.",
   },
   {
     title: "CropGuard AI",
@@ -99,8 +90,8 @@ export const projects: Project[] = [
     stack: ["PyTorch", "Streamlit", "PWA"],
     href: "https://github.com/amanuniyal5/CropGuard-AI",
     metric: "Diagnoses 38 diseases offline",
-    accent: "orange",
-    kind: "leaf",
+    demo: "leaf",
+    hint: "Scan a leaf.",
   },
   {
     title: "Fault-Tolerant Distributed Storage",
@@ -109,8 +100,8 @@ export const projects: Project[] = [
     stack: ["C", "POSIX", "TCP/IP"],
     href: "https://github.com/Ekansh0301/Fault-Tolerant-Distributed-Storage-System",
     metric: "Zero data loss on crash",
-    accent: "ember",
-    kind: "planes",
+    demo: "planes",
+    hint: "Read a file, then crash a node.",
   },
 ];
 

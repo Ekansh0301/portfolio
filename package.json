@@ -10,8 +10,6 @@
     "lint": "oxlint"
   },
   "dependencies": {
-    "gsap": "^3.13.0",
-    "lenis": "^1.1.20",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
