@@ -23,7 +23,7 @@ const ROWS: L[][] = [
     { ch: "O", word: "Offline", repo: "Voxd", line: "A voice assistant that runs on a 4 GB laptop GPU.", demo: "intelligence" },
     { ch: "Y", word: "Yao", repo: "CryptoStack", line: "Twenty cryptographic primitives from scratch, up to two-party computation.", demo: "intelligence" },
     { ch: "A", word: "Address", repo: "XV6-and-C-Shell", line: "An xv6 kernel with lazy copy-on-write and custom scheduling, plus a C shell." },
-    { ch: "L", word: "LRU", repo: "Fault-Tolerant-Distributed-Storage-System", line: "The naming server's cache in my distributed file system.", demo: "applied" },
+    { ch: "L", word: "LRU", repo: "Fault-Tolerant-Distributed-Storage-System", line: "The naming server's cache in my distributed file system: control plane and data plane, in C." },
   ],
 ];
 const FLAT = ROWS.flat();

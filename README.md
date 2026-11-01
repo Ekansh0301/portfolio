@@ -20,6 +20,7 @@ npm run dev
 | `src/components/Hero.tsx` | The name page: a nameplate where every letter of EKANSH GOYAL is a tile for one of my public repositories (a dot marks the ones that also have a demo here). It flips to show the project with a GitHub link; a spotlight walks along the plate, and hover or tap takes over. |
 | `src/components/Rail.tsx` | The scene index on the right edge. |
 | `src/lib/kv.ts` | The Dynamo-style cluster model behind the QuorumKV demo. |
+| `src/lib/futures.ts` | The paired Monte Carlo, value bridge and hash-chained file behind the Foresight demo. |
 | `src/lib/lgsm.ts` | LGSM's forward pass (two streams, gate, fusion) over the film's beats. |
 | `src/lib/rsa.ts`, `src/lib/sha256.ts` | Big-integer RSA, Miller-Rabin, CRT, SHA-256 and HMAC for the CryptoStack attacks. |
 | `src/lib/aes.ts` | AES-128 from the spec (ECB and CTR), checked against the NIST/FIPS-197 vectors. |
@@ -34,7 +35,7 @@ Each shows one idea from the project and plays by itself. At most one or two con
 - **Vox (`Voice`)**: a desktop that TARS drives with the repo's real tools and tiers. Eight scenarios (read the screen, search, trash with an approval dialog, timer, find files, volume, a read-only command, and `sudo` refused). Stage timings are the README's measurements.
 - **CryptoStack (`Cipher`)**: a map of the twenty primitives in their five phases with the reductions between them, and a live attack for seven of them, all running for real: Miller-Rabin vs Carmichael numbers, ECB leaking structure (AES-128 from the spec), bit-flipping CTR vs Encrypt-then-MAC, textbook RSA determinism, Håstad's broadcast attack via CRT, signature forgery, and a Diffie-Hellman man in the middle.
 - **Anemia Detection (`Eye`)**: the app's flow on a real photograph of the lower lid pulled down, with the red palpebral conjunctiva below the eye. The quality gate (Laplacian sharpness, brightness) and the Hb estimate read the real pixels; the mask is a colour threshold on those pixels standing in for UNet++; earlier visits are simulated by grading the conjunctiva. The repository is private.
-- **Distributed Storage (`Planes`)**: the Naming Server answers where a file is and steps out; bytes flow client to storage server directly. Click a storage server to drop it and bring it back.
+- **Foresight (`Futures`)**: first prize at LPL WealthX 2026. A recommendation and its alternative on the same 10,000 simulated futures (a paired comparison), a cause-by-cause value bridge that adds up exactly to the difference, and a hash-chained Best-Interest File you can replay (identical to the dollar) or tamper with (the chain breaks at the edited line). A small illustrative model; the mechanisms are the project's. The repository is private, so the card links to the public demo video.
 - **EMNLP paper (`Lgsm`)**: LGSM reading *Inception* (2010) beat by beat through the paper's two streams and scalar gate, including a scene it misses (abstract suppression). Gate behaviour, feature directions and group differences are from the paper; per-scene values are illustrative and the beats are my summary of the film. **SemEval paper (`Density`)**: type any post; a transparent lexicon-and-slots scorer highlights the five narrative slots and predicts belief at the project's τ = 0.595. It illustrates the signal and is not the DeBERTa model.
 
 ## Notes

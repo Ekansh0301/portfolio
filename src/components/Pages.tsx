@@ -4,10 +4,10 @@ import Critics from "./demos/Critics";
 import Voice from "./demos/Voice";
 import Cipher from "./demos/Cipher";
 import Eye from "./demos/Eye";
-import Planes from "./demos/Planes";
+import Futures from "./demos/Futures";
 
 const demos: Record<Project["demo"], () => React.JSX.Element> = {
-  ring: Ring, critics: Critics, voice: Voice, cipher: Cipher, eye: Eye, planes: Planes,
+  ring: Ring, critics: Critics, voice: Voice, cipher: Cipher, eye: Eye, futures: Futures,
 };
 
 export function Slate({ scene, title, note }: { scene: number; title: React.ReactNode; note?: string }) {
@@ -19,8 +19,8 @@ export function Slate({ scene, title, note }: { scene: number; title: React.Reac
   );
 }
 
-export function Card({ n, title, metric, txt, chips, href, priv, children }: {
-  n: string; title: string; metric?: string; txt: string; chips?: string[]; href?: string; priv?: boolean; children: React.ReactNode;
+export function Card({ n, title, metric, txt, chips, href, video, priv, children }: {
+  n: string; title: string; metric?: string; txt: string; chips?: string[]; href?: string; video?: string; priv?: boolean; children: React.ReactNode;
 }) {
   return (
     <article className="card">
@@ -32,7 +32,7 @@ export function Card({ n, title, metric, txt, chips, href, priv, children }: {
       {children}
       <div className="card-foot">
         <div className="chips">{chips?.map((c) => <span className="chip" key={c}>{c}</span>)}</div>
-        {href ? <a className="link" href={href} target="_blank" rel="noreferrer">source ↗</a> : priv && <span className="mono dim" title="The code is not public">private repository</span>}
+        <span style={{ display: "flex", gap: "0.9rem", alignItems: "baseline" }}>{video && <a className="link" href={video} target="_blank" rel="noreferrer">watch the demo ↗</a>}{href ? <a className="link" href={href} target="_blank" rel="noreferrer">source ↗</a> : priv && <span className="mono dim" title="The code is not public">private repository</span>}</span>
       </div>
     </article>
   );
@@ -49,7 +49,7 @@ export function WorkPage({ id, scene, title, items, first, alt, cols }: {
           {items.map((p, i) => {
             const Demo = demos[p.demo];
             return (
-              <Card key={p.title} n={String(first + i).padStart(2, "0")} title={p.title} metric={p.metric} txt={p.short} chips={p.stack} href={p.href} priv={!p.href}>
+              <Card key={p.title} n={String(first + i).padStart(2, "0")} title={p.title} metric={p.metric} txt={p.short} chips={p.stack} href={p.href} video={p.video} priv={!p.href}>
                 <Demo />
               </Card>
             );

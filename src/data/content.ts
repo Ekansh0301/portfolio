@@ -38,8 +38,9 @@ export type Project = {
   blurb: string;
   stack: string[];
   href?: string;
+  video?: string;
   metric: string;
-  demo: "ring" | "critics" | "voice" | "cipher" | "eye" | "planes";
+  demo: "ring" | "critics" | "voice" | "cipher" | "eye" | "futures";
   hint: string;
 };
 
@@ -104,16 +105,16 @@ export const projects: Project[] = [
     hint: "Spoil the photo, then rescue it.",
   },
   {
-    title: "Fault-Tolerant Distributed Storage",
+    title: "Foresight",
     short:
-      "A concurrent distributed file system in C. A naming server owns the tree behind an LRU cache, then clients stream straight from storage nodes.",
+      "A decision layer for financial advisors. It runs a recommendation and its alternatives on the same 10,000 futures, explains in dollars why one wins, and writes a file a regulator can replay.",
     blurb:
-      "A concurrent distributed file system in C that splits the metadata and data planes. A Naming Server owns the directory tree behind a thread-safe LRU cache, then steps out of the way so clients stream bytes straight from storage nodes over TCP.",
-    stack: ["C", "POSIX", "TCP/IP"],
-    href: "https://github.com/Ekansh0301/Fault-Tolerant-Distributed-Storage-System",
-    metric: "Zero data loss on crash",
-    demo: "planes",
-    hint: "Read a file, then crash a node.",
+      "Crash-test every recommendation before the client signs. Foresight reads a family's statements into a digital twin, runs a recommendation and its alternatives through the same 10,000 simulated futures, and turns the answer into a Best-Interest File: every number linked to its source, a replay that reproduces it to the cent, and a tamper-evident record. First prize at LPL WealthX 2026, with Krishna and Devansh.",
+    stack: ["Python", "NumPy", "Next.js"],
+    metric: "First prize · LPL WealthX 2026",
+    video: "https://youtu.be/DF43X6l2lD0",
+    demo: "futures",
+    hint: "Same futures, two options.",
   },
 ];
 
