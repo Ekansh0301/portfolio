@@ -10,14 +10,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
  * photo towards pale. The mask is a colour threshold on the real pixels (a
  * stand-in for UNet++), and the Hb mapping is a toy calibration.
  */
-const W = 360, H = 269, BLUR_MIN = 120, LUM: [number, number] = [70, 215];
-const PALE = [236, 201, 196];
+const W = 346, H = 141, BLUR_MIN = 120, LUM: [number, number] = [70, 215];
+const PALE = [240, 214, 208];
 const VISITS = [
   { label: "Visit 1", k: 0.8, bad: { blur: 4, light: 1 } },
   { label: "Visit 2", k: 0.45, bad: null },
   { label: "Visit 3", k: 0, bad: null },
 ];
-const RATIO0 = 0.646; // mean green/red under the mask in the untouched photo
+const RATIO0 = 0.7294; // mean green/red under the mask in the untouched photo
 
 type Assets = { base: ImageData; mask: Uint8Array; soft: Uint8ClampedArray };
 function load(src: string) { return new Promise<HTMLImageElement>((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = src; }); }
@@ -64,7 +64,7 @@ function analyse(img: ImageData, mask: Uint8Array) {
   const sharp = s2 / n - (s / n) ** 2;
   let cnt = 0, rs = 0;
   for (let i = 0; i < W * H; i++) if (mask[i]) { cnt++; rs += data[i * 4 + 1] / Math.max(data[i * 4], 1); }
-  const hb = cnt ? Math.max(4, Math.min(15.5, 12.9 - 42.7 * (rs / cnt - RATIO0))) : null;
+  const hb = cnt ? Math.max(4, Math.min(15.5, 12.9 - 53.4 * (rs / cnt - RATIO0))) : null;
   return { sharp, meanL, pass: sharp >= BLUR_MIN && meanL >= LUM[0] && meanL <= LUM[1], hb };
 }
 // WHO cut-offs for non-pregnant adult women, g/dL.
@@ -106,7 +106,7 @@ export default function Eye() {
         const i = y * W + x;
         if (!a.mask[i]) continue;
         x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
-        tint.data[i * 4] = 40; tint.data[i * 4 + 1] = 130; tint.data[i * 4 + 2] = 255; tint.data[i * 4 + 3] = 120;
+        tint.data[i * 4] = 60; tint.data[i * 4 + 1] = 170; tint.data[i * 4 + 2] = 190; tint.data[i * 4 + 3] = 95;
       }
       const t = document.createElement("canvas"); t.width = W; t.height = H;
       t.getContext("2d")!.putImageData(tint, 0, 0);
@@ -170,7 +170,7 @@ export default function Eye() {
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.25fr) minmax(0,1fr)", gap: "0.9rem", alignItems: "center" }}>
         <div style={{ position: "relative", lineHeight: 0 }}>
           <canvas ref={cv} width={W} height={H} style={{ width: "100%", height: "auto", display: "block", borderRadius: 8, background: "var(--bg-2)" }} aria-label="Photograph of an eye with the lower lid pulled down, showing the red conjunctiva" />
-          <div style={{ position: "absolute", left: "5%", top: "14%", width: "90%", height: "78%", border: "1.5px dashed rgba(255,255,255,0.85)", borderRadius: 8, pointerEvents: "none" }} />
+          <div style={{ position: "absolute", left: "3%", top: "10%", width: "94%", height: "80%", border: "1.5px dashed rgba(255,255,255,0.85)", borderRadius: 8, pointerEvents: "none" }} />
           {retake && <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", background: "rgba(10,10,12,0.62)", borderRadius: 8 }}><span className="mono bad" style={{ textAlign: "center", lineHeight: 1.5, color: "#ff9d8f" }}>too blurry<br />please retake</span></div>}
           {!ready && <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}><span className="mono dim">loading photo…</span></div>}
         </div>
@@ -200,7 +200,7 @@ export default function Eye() {
           </svg>
         </div>
       </div>
-      <div className="mono dim" style={{ fontSize: "0.58rem" }}>Photo: J. Trobe, MD, Univ. of Michigan Kellogg Eye Center, CC BY 3.0 (Wikimedia Commons), cropped and colour-softened. Earlier visits simulated by grading.</div>
+      <div className="mono dim" style={{ fontSize: "0.58rem" }}>Photo: J. Trobe, MD, Univ. of Michigan Kellogg Eye Center, CC BY 3.0 (Wikimedia Commons), cropped and colour-softened to a gentler look. Earlier visits simulated by grading.</div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 # Ekansh Goyal, Portfolio
 
-A reel of scenes, because the research is about reading screenplays. Seven screens, two projects per screen, and every project carries a model of its core idea that really computes. Vite + React 19 + TypeScript. No animation libraries.
+A reel of scenes, because the research is about reading screenplays. Eight screens, two projects per screen, and every project carries a model of its core idea that really computes. Vite + React 19 + TypeScript. No animation libraries.
 
 ## Run
 
@@ -17,7 +17,8 @@ npm run dev
 | --- | --- |
 | `src/data/content.ts` | All copy: profile, projects, publications, experience, skills, contact-form keys. |
 | `src/index.css` | Tokens (light and dark) and every style. Change `--accent` and the site follows. |
-| `src/components/Hero.tsx` | The name page: a nameplate where every letter of EKANSH GOYAL is a tile for one of my public repositories (a dot marks the ones that also have a demo here). It flips to show the project with a GitHub link; a spotlight walks along the plate, and hover or tap takes over. |
+| `src/components/Experience.tsx`, `src/components/Tools.tsx` | Where I have worked (a three-role timeline) and what I build with (grouped tool cards), each its own screen. |
+| `src/components/Hero.tsx` | The name page: every letter of EKANSH GOYAL is a tile for one of my public repositories It flips to show the project with a GitHub link, and a demo link where one exists; a spotlight walks along the name, and hover or tap takes over. |
 | `src/components/Rail.tsx` | The scene index on the right edge. |
 | `src/lib/kv.ts` | The Dynamo-style cluster model behind the QuorumKV demo. |
 | `src/lib/futures.ts` | The paired Monte Carlo, value bridge and hash-chained file behind the Foresight demo. |
@@ -31,7 +32,7 @@ npm run dev
 Each shows one idea from the project and plays by itself. At most one or two controls.
 
 - **QuorumKV (`Ring`)**: the real cluster model (N=4, W=3, R=2 like the repo's defaults) under live traffic. Click nodes to crash them; hinted handoff and quorums keep it answering until too many are gone, and the counters stay honest.
-- **The Director LLM (`Critics`)**: where the supervised baseline sounds right and is quietly wrong. Four scenarios (an ignored action, a contradiction, a hallucination, amnesia) from the World Consistency critic's taxonomy and the PPO README's real generation pair, with the intent weights as bars, the offending phrase underlined, and a fuller PPO answer.
+- **The Director LLM (`Critics`)**: where the supervised baseline sounds right and is quietly wrong. Four scenarios (an ignored action, a contradiction, a hallucination, amnesia) from the World Consistency critic's taxonomy and the PPO README's real generation pair, with the intent weights as short vertical bars, the offending phrase underlined, a fuller PPO answer, and one score per answer.
 - **Vox (`Voice`)**: a desktop that TARS drives with the repo's real tools and tiers. Eight scenarios (read the screen, search, trash with an approval dialog, timer, find files, volume, a read-only command, and `sudo` refused). Stage timings are the README's measurements.
 - **CryptoStack (`Cipher`)**: a map of the twenty primitives in their five phases with the reductions between them, and a live attack for seven of them, all running for real: Miller-Rabin vs Carmichael numbers, ECB leaking structure (AES-128 from the spec), bit-flipping CTR vs Encrypt-then-MAC, textbook RSA determinism, Håstad's broadcast attack via CRT, signature forgery, and a Diffie-Hellman man in the middle.
 - **Anemia Detection (`Eye`)**: the app's flow on a real photograph of the lower lid pulled down, with the red palpebral conjunctiva below the eye. The quality gate (Laplacian sharpness, brightness) and the Hb estimate read the real pixels; the mask is a colour threshold on those pixels standing in for UNet++; earlier visits are simulated by grading the conjunctiva. The repository is private.
@@ -47,4 +48,4 @@ Each shows one idea from the project and plays by itself. At most one or two con
 
 ## Credits
 
-The anemia demo uses "Chlamydial-conjunctivitis.jpg" by Jonathan Trobe, M.D., University of Michigan Kellogg Eye Center, licensed CC BY 3.0 (Wikimedia Commons), cropped, smoothed and colour-softened, with a derived segmentation mask. The original shows an inflamed conjunctiva; it is used here for the lower-lid view only. To use your own clinical capture, replace `public/images/eye-lid.jpg` and `public/images/eye-lid-mask.png` (same size) and recalibrate `RATIO0` in `Eye.tsx`.
+The anemia demo uses "Chlamydial-conjunctivitis.jpg" by Jonathan Trobe, M.D., University of Michigan Kellogg Eye Center, licensed CC BY 3.0 (Wikimedia Commons), cropped to the lower lid, smoothed and colour-softened, with a derived segmentation mask. The original shows an inflamed conjunctiva; it is used here for the lower-lid view only. To use your own clinical capture, replace `public/images/eye-lid.jpg` and `public/images/eye-lid-mask.png` (same size) and recalibrate `RATIO0` in `Eye.tsx`.

@@ -57,23 +57,22 @@ function Flagged({ text, flag }: { text: string; flag?: string }) {
   return <>{text.slice(0, i)}<mark style={{ background: "color-mix(in srgb, var(--bad) 18%, transparent)", color: "inherit", borderBottom: "2px solid var(--bad)", borderRadius: 2 }}>{flag}</mark>{text.slice(i + flag.length)}</>;
 }
 
-function Card({ title, side, tone, focus }: { title: string; side: Side; tone: "base" | "ppo"; focus: K }) {
+function Card({ title, side, tone, w }: { title: string; side: Side; tone: "base" | "ppo"; w: Record<K, number> }) {
   const good = tone === "ppo";
+  // One score per answer: the intent-weighted reward over the critics scored, or the lone critic's score.
+  const wsum = side.rows.reduce((a, r) => a + w[r.k], 0);
+  const score = side.rows.length > 1 ? side.rows.reduce((a, r) => a + w[r.k] * r.v, 0) / wsum : side.rows[0].v;
+  const label = side.rows.length > 1 ? "intent-weighted reward" : `${NAMES[side.rows[0].k].toLowerCase()} critic`;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.55rem", border: `1px solid ${good ? "var(--accent)" : "var(--rule)"}`, borderRadius: 10, padding: "0.75rem 0.85rem", background: "var(--card)", minWidth: 0 }}>
       <div className="mono" style={{ fontSize: "0.64rem", letterSpacing: "0.08em", textTransform: "uppercase", color: good ? "var(--accent)" : "var(--ink-3)" }}>{title}</div>
       <p style={{ margin: 0, fontFamily: "var(--serif)", fontSize: "0.9rem", lineHeight: 1.45, flex: 1, color: good ? "var(--ink)" : "var(--ink-2)" }}><Flagged text={side.text} flag={side.flag} /></p>
       {side.gains && <div className="chips">{side.gains.map((g) => <span key={g} className="chip" style={{ background: "color-mix(in srgb, var(--ok) 14%, transparent)", color: "var(--ok)" }}>+ {g}</span>)}</div>}
-      <div style={{ display: "grid", gap: 5 }}>
-        {side.rows.map((r) => (
-          <div key={r.k} className="mono" style={{ display: "grid", gridTemplateColumns: "4.6rem 1fr 2.2rem", gap: 8, alignItems: "center" }}>
-            <span style={{ fontSize: "0.64rem", color: r.k === focus ? "var(--accent)" : "var(--ink-2)" }}>{NAMES[r.k]}</span>
-            <div className="bar" style={{ height: 7 }}><i style={{ width: `${r.v * 100}%`, background: r.v < 0.5 ? "var(--bad)" : good ? "var(--ok)" : "var(--accent)" }} /></div>
-            <span style={{ fontSize: "0.68rem", textAlign: "right", color: r.v < 0.5 ? "var(--bad)" : "var(--ink)" }}>{r.v.toFixed(2)}</span>
-          </div>
-        ))}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", borderTop: "1px solid var(--rule)", paddingTop: 6 }}>
+        <span className="mono dim" style={{ fontSize: "0.6rem" }}>{label}</span>
+        <span style={{ fontFamily: "var(--serif)", fontSize: "1.9rem", lineHeight: 1, color: score < 0.5 ? "var(--bad)" : good ? "var(--ok)" : "var(--ink)" }}>{score.toFixed(2)}</span>
       </div>
-      <div className="mono" style={{ fontSize: "0.66rem", lineHeight: 1.4, color: good ? "var(--ok)" : "var(--bad)", borderTop: "1px solid var(--rule)", paddingTop: 6 }}>{good ? "✓" : "✗"} {side.verdict}</div>
+      <div className="mono" style={{ fontSize: "0.66rem", lineHeight: 1.4, color: good ? "var(--ok)" : "var(--bad)" }}>{good ? "✓" : "✗"} {side.verdict}</div>
     </div>
   );
 }
@@ -96,7 +95,7 @@ export default function Critics() {
         <div className="tabs">{TURNS.map((t, k) => <button key={t.tab} className={`sm ${i === k ? "on" : ""}`} onClick={() => { manual.current = true; setI(k); }}>{t.tab}</button>)}</div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.25fr) minmax(0,1fr)", gap: "1rem", alignItems: "start" }}>
+      <div className="crit-top">
         <div style={{ display: "grid", gap: "0.55rem" }}>
           <div>
             <div className="mono dim" style={{ fontSize: "0.6rem", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3 }}>player · trap <b className="acc">{T.trap}</b></div>
@@ -109,21 +108,20 @@ export default function Critics() {
         </div>
         <div>
           <div className="mono dim" style={{ fontSize: "0.6rem", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5 }}>intent <b className="acc">{T.intent}</b> → critic weights</div>
-          <div style={{ display: "grid", gap: 4 }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "flex-end", height: 62 }} aria-label="Critic weights for this intent">
             {(Object.keys(NAMES) as K[]).map((k) => (
-              <div key={k} className="mono" style={{ display: "grid", gridTemplateColumns: "4.4rem 1fr 2.1rem", gap: 8, alignItems: "center" }}>
-                <span style={{ fontSize: "0.64rem", color: w[k] === top ? "var(--accent)" : "var(--ink-2)" }}>{NAMES[k]}</span>
-                <div className="bar" style={{ height: 7 }}><i style={{ width: `${(w[k] / 0.4) * 100}%`, background: w[k] === top ? "var(--accent)" : "var(--ink-3)", transition: "width 0.5s var(--ease)" }} /></div>
-                <span style={{ fontSize: "0.66rem", textAlign: "right" }}>{Math.round(w[k] * 100)}%</span>
+              <div key={k} className="mono" style={{ flex: 1, textAlign: "center" }}>
+                <div style={{ height: `${(w[k] / 0.4) * 38}px`, background: w[k] === top ? "var(--accent)" : "var(--ink-3)", opacity: w[k] === top ? 1 : 0.55, borderRadius: 3, transition: "height 0.5s var(--ease)" }} />
+                <div style={{ fontSize: "0.56rem", color: w[k] === top ? "var(--accent)" : "var(--ink-3)", marginTop: 3, whiteSpace: "nowrap" }}>{k === "Ch" ? "Char" : NAMES[k].slice(0, 4)} {Math.round(w[k] * 100)}%</div>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.8rem", flex: 1 }}>
-        <Card title="Supervised baseline" side={T.base} tone="base" focus={T.focus} />
-        <Card title="After PPO with the critics" side={T.ppo} tone="ppo" focus={T.focus} />
+      <div key={i} className="crit-cards">
+        <Card title="Supervised baseline" side={T.base} tone="base" w={w} />
+        <Card title="After PPO with the critics" side={T.ppo} tone="ppo" w={w} />
       </div>
     </div>
   );

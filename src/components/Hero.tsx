@@ -47,9 +47,9 @@ export default function Hero({ id }: { id: string }) {
           <div className="hero-left">
             <div className="mono dim" style={{ textTransform: "uppercase", letterSpacing: "0.12em" }}>Every letter is one of my repositories · hover to read</div>
 
-            <div className="plate" onPointerLeave={() => { hover.current = false; }}>
+            <div className="tiles" onPointerLeave={() => { hover.current = false; }}>
               {ROWS.map((row, r) => (
-                <div className="tile-row" key={r}>
+                <div className="tile-row" key={r} style={{ paddingLeft: r ? "clamp(0.4rem, 3vw, 2.4rem)" : 0 }}>
                   {row.map((l) => {
                     const idx = ++n, on = idx === active;
                     return (
@@ -58,7 +58,7 @@ export default function Hero({ id }: { id: string }) {
                         onFocus={() => { hover.current = true; setActive(idx); }}
                         onClick={() => { hover.current = true; setActive(idx); }}>
                         <span className="tile-in">
-                          <span className="face front">{l.ch}{l.demo && <i className="dot" title="has a demo on this site" />}</span>
+                          <span className="face front">{l.ch}</span>
                           <span className="face back"><b>{l.ch}</b><i>{l.word}</i></span>
                         </span>
                       </button>
@@ -71,12 +71,11 @@ export default function Hero({ id }: { id: string }) {
             <div className="tile-cap" key={active} aria-live="polite">
               <span className="mono acc">{cur.ch} · {cur.word} · {cur.repo}</span>
               <span>{cur.line}</span>
-              <span className="row" style={{ marginTop: "0.35rem" }}>
-                <a className="navbtn solid" href={GH + cur.repo} target="_blank" rel="noreferrer">GitHub <span aria-hidden>↗</span></a>
-                {cur.demo && <a className="navbtn" href={`#${cur.demo}`}>see the demo ↓</a>}
+              <span className="row" style={{ gap: "1.1rem", marginTop: "0.2rem" }}>
+                <a className="link" href={GH + cur.repo} target="_blank" rel="noreferrer">GitHub ↗</a>
+                {cur.demo && <a className="link" href={`#${cur.demo}`}>see the demo ↓</a>}
               </span>
             </div>
-            <p className="mono dim" style={{ fontSize: "0.64rem", margin: 0 }}><i className="dot inline" /> also has a demo on this site</p>
 
             <p className="tagline">{profile.tagline}</p>
             <div className="row">

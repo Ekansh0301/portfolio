@@ -141,37 +141,42 @@ export const experience = [
     period: "May 2025 - Present",
     org: "LTRC · IIIT Hyderabad",
     role: "Undergraduate Researcher",
+    advisor: "Advisor: Prof. Rajakrishnan Rajkumar",
     summary:
-      "Building deep learning NLP for multi-objective narrative generation and cross-linguistic psycholinguistic analysis under Dr. Rajakrishnan Rajkumar.",
+      "Deep-learning NLP for narrative and psycholinguistics: what makes a scene matter, and how belief shows up in text.",
     points: [
-      "Teaching Assistant for Computational Linguistics II with formal commendation",
-      "First-authored SemEval @ ACL 2026 paper on conspiracy belief detection",
-      "Research List Award recipient, 2025-26",
+      "First author of the SemEval-2026 paper on conspiracy belief detection.",
+      "Led the EMNLP 2026 scene-saliency paper: +16% detection F1 on a 133K-sample dataset through architecture changes and ablations.",
+      "Built reproducible experiment infrastructure (data versioning, hyperparameter tracking, CI evaluation): 40% faster iteration.",
+      "Teaching Assistant for Computational Linguistics II, with formal commendation. Research List Award, 2025-26.",
     ],
+    tags: ["PyTorch", "Transformers", "SHAP", "CI"],
   },
   {
     period: "May 2025 - June 2025",
     org: "Sanwariya Ji Synthetics",
     role: "Software Engineer Intern",
-    summary:
-      "Engineered an automated Python inventory pipeline replacing a legacy dispatch workflow.",
+    advisor: "Industry internship",
+    summary: "Replaced a legacy dispatch workflow with an automated inventory pipeline.",
     points: [
-      "Integrated YOLO + PaddleOCR to digitize handwritten records",
-      "Normalized ingested data into a structured SQL schema",
-      "Eliminated manual entry errors and data discrepancies",
+      "Integrated YOLO and PaddleOCR to digitize handwritten records.",
+      "Normalized the ingested data into a structured SQL schema.",
+      "Eliminated manual entry errors and data discrepancies.",
     ],
+    tags: ["Python", "YOLO", "PaddleOCR", "SQL"],
   },
   {
     period: "Jan 2025 - April 2025",
-    org: "SDG3Health",
-    role: "Project Intern",
-    summary:
-      "Developed a non-invasive anemia detection pipeline via UNet++ conjunctiva segmentation with image quality gating.",
+    org: "SDG3 Health",
+    role: "Software Engineering Intern",
+    advisor: "Team of five · private repository",
+    summary: "Non-invasive anemia detection from a photo of the inner eyelid, built for low-resource clinics.",
     points: [
-      "94% Dice Score on conjunctiva segmentation",
-      "Deployed a 1.5MB quantized edge model to a React Native app",
-      "Added government ID OCR and longitudinal record tracking",
+      "Owned a medical imaging platform for 50,000+ diagnostic images, with production REST APIs and containerized pipelines.",
+      "UNet++ conjunctiva segmentation at 94% Dice, shipped as a 1.5 MB quantized model in a React Native app.",
+      "Cut cloud inference cost 68% through quantization and pruning, with Docker edge packaging for the field.",
     ],
+    tags: ["UNet++", "ONNX", "React Native", "Docker"],
   },
 ];
 
@@ -216,8 +221,6 @@ export const skillGroups: SkillGroup[] = [
   },
 ];
 
-export const philosophy =
-  "I believe the best systems are the ones you can reason about all the way down. Every abstraction, every benchmark, every line of code is a chance to make something rigorous feel effortless.";
 
 /** The reel: one entry per screen, used by the scene rail and the opening's film strip. */
 export const scenes = [
@@ -226,6 +229,7 @@ export const scenes = [
   { id: "intelligence", label: "Voice & crypto" },
   { id: "applied", label: "Applied" },
   { id: "research", label: "Research" },
-  { id: "career", label: "Career" },
+  { id: "experience", label: "Experience" },
+  { id: "tools", label: "Tools" },
   { id: "contact", label: "Contact" },
 ] as const;
