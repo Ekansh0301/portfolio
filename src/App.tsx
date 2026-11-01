@@ -1,29 +1,36 @@
 import Nav from "./components/Nav";
+import Rail from "./components/Rail";
 import Hero from "./components/Hero";
-import Projects from "./components/Projects";
+import { WorkPage } from "./components/Pages";
 import Research from "./components/Research";
-import Experience from "./components/Experience";
-import Skills from "./components/Skills";
-import Repos from "./components/Repos";
-import Philosophy from "./components/Philosophy";
+import Closing from "./components/Closing";
 import Contact from "./components/Contact";
-import Footer from "./components/Footer";
+import { projects } from "./data/content";
+
+export const SCENES = [
+  { id: "opening", label: "Opening" },
+  { id: "systems", label: "Systems" },
+  { id: "intelligence", label: "Voice & crypto" },
+  { id: "applied", label: "Applied" },
+  { id: "research", label: "Research" },
+  { id: "career", label: "Career" },
+  { id: "contact", label: "Contact" },
+];
 
 export default function App() {
   return (
     <>
       <Nav />
+      <Rail scenes={SCENES} />
       <main>
-        <Hero />
-        <Projects />
-        <Research />
-        <Experience />
-        <Skills />
-        <Repos />
-        <Philosophy />
-        <Contact />
+        <Hero id="opening" />
+        <WorkPage id="systems" scene={2} title={<>Systems that <em>survive</em></>} items={[projects[0], projects[1]]} first={1} />
+        <WorkPage id="intelligence" scene={3} title={<>Things that <em>listen</em> and <em>resist</em></>} items={[projects[2], projects[3]]} first={3} alt />
+        <WorkPage id="applied" scene={4} title={<>Models in the <em>field</em></>} items={[projects[4], projects[5]]} first={5} />
+        <Research id="research" scene={5} />
+        <Closing id="career" scene={6} />
+        <Contact id="contact" scene={7} />
       </main>
-      <Footer />
     </>
   );
 }

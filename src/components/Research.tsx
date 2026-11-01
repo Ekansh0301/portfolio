@@ -1,31 +1,19 @@
 import { publications } from "../data/content";
-import Reveal from "./Reveal";
+import { Card, Slate } from "./Pages";
+import Gate from "./demos/Gate";
+import Density from "./demos/Density";
 
-export default function Research() {
+export default function Research({ id, scene }: { id: string; scene: number }) {
+  const demos = [<Gate key="g" />, <Density key="d" />];
   return (
-    <section id="research" style={{ background: "var(--bg-2)" }}>
+    <section id={id} className="page alt">
       <div className="wrap">
-        <Reveal>
-          <div className="eyebrow"><b>02</b> / Research</div>
-          <h2 className="h2">Papers &amp; <em>findings</em></h2>
-        </Reveal>
-        <div style={{ marginTop: "3rem" }}>
-          {publications.map((p) => (
-            <Reveal key={p.title}>
-              <div className="row-item">
-                <div>
-                  <div className="mono">{p.venue}</div>
-                  <div className="mono" style={{ color: "var(--accent)", marginTop: "0.3rem" }}>{p.status}</div>
-                </div>
-                <div>
-                  <h3>{p.title}</h3>
-                  <p>{p.detail}</p>
-                  {"href" in p && p.href && (
-                    <a className="link" href={p.href} target="_blank" rel="noreferrer">Code ↗</a>
-                  )}
-                </div>
-              </div>
-            </Reveal>
+        <Slate scene={scene} title={<>Papers &amp; <em>findings</em></>} note="two publications" />
+        <div className="pair">
+          {publications.map((p, i) => (
+            <Card key={p.title} n={p.venue} title={i === 0 ? "Scene saliency in screenplays" : "Truth Gradient"} metric={p.status} txt={p.detail} href={"href" in p ? p.href : undefined}>
+              {demos[i]}
+            </Card>
           ))}
         </div>
       </div>

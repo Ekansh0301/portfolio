@@ -34,17 +34,20 @@ export const socials = [
 
 export type Project = {
   title: string;
+  short: string;
   blurb: string;
   stack: string[];
-  href: string;
+  href?: string;
   metric: string;
-  demo: "ring" | "critics" | "voice" | "cipher" | "leaf" | "planes";
+  demo: "ring" | "critics" | "voice" | "cipher" | "eye" | "planes";
   hint: string;
 };
 
 export const projects: Project[] = [
   {
     title: "QuorumKV",
+    short:
+      "Masterless DynamoDB-style store: gossip, a consistent hash ring, N/R/W quorums, vector clocks, hinted handoff and Merkle anti-entropy.",
     blurb:
       "A masterless, DynamoDB-inspired key-value store. Peers gossip over a 128-bit consistent hash ring with virtual nodes, while tunable N/R/W quorums, vector clocks, hinted handoff and Merkle-tree anti-entropy keep it available straight through a partition.",
     stack: ["Python", "Redis", "Gossip"],
@@ -55,6 +58,8 @@ export const projects: Project[] = [
   },
   {
     title: "The Director LLM",
+    short:
+      "Four critics score narrative, causality, world and voice. An intent-conditioned weighting decides which one leads each turn.",
     blurb:
       "Multi-critic reinforcement learning for interactive narrative. Four independently trained critics score narrative quality, causal consistency, world coherence and character voice, and an intent-conditioned weighting function decides which one should dominate each turn.",
     stack: ["PyTorch", "PPO", "QLoRA"],
@@ -65,6 +70,8 @@ export const projects: Project[] = [
   },
   {
     title: "Vox",
+    short:
+      "Hold a key, talk, let go. Opens apps, runs commands, reads your screen and answers aloud, fully offline on a 4 GB GPU.",
     blurb:
       "Hold a key, talk, let go. Vox opens apps and links, runs shell commands, writes files, reads whatever is on your screen, and answers in a voice of its own. All of it happens on a 4 GB laptop GPU, so there is no subscription, no API key, and nothing leaves the machine.",
     stack: ["Ollama", "Whisper", "Piper"],
@@ -75,6 +82,8 @@ export const projects: Project[] = [
   },
   {
     title: "CryptoStack",
+    short:
+      "Twenty cryptographic primitives from first principles on the Python standard library, with a dashboard built to break each one.",
     blurb:
       "Twenty cryptographic primitives written from first principles on the Python standard library alone, from one-way functions up to 2-party MPC via oblivious transfer, behind a 50-endpoint API and a dashboard built to let you break each one.",
     stack: ["FastAPI", "React", "Cryptography"],
@@ -84,17 +93,20 @@ export const projects: Project[] = [
     hint: "Flip one bit of the input.",
   },
   {
-    title: "CropGuard AI",
+    title: "Anemia Detection",
+    short:
+      "Photograph the inner eyelid, get a haemoglobin estimate and anaemia severity. A quality gate, UNet++ segmentation and a 1.5 MB quantized model that runs on the phone.",
     blurb:
-      "Photograph a sick leaf, get a diagnosis and a farmer-readable action plan. MobileNetV3-Small fine-tuned across 54,303 PlantVillage images with two-stage unfreezing and OneCycleLR, shipped as an offline-capable PWA.",
-    stack: ["PyTorch", "Streamlit", "PWA"],
-    href: "https://github.com/amanuniyal5/CropGuard-AI",
-    metric: "Diagnoses 38 diseases offline",
-    demo: "leaf",
-    hint: "Scan a leaf.",
+      "Non-invasive anaemia screening for places without a lab. An image quality gate rejects blurry or dark captures, UNet++ segments the conjunctiva, and a quantized on-device model estimates haemoglobin and classifies severity. Doctors register patients by Aadhaar OCR and track each patient over time.",
+    stack: ["UNet++", "ONNX", "React Native"],
+    metric: "94% Dice · 1.5 MB on-device",
+    demo: "eye",
+    hint: "Spoil the photo, then rescue it.",
   },
   {
     title: "Fault-Tolerant Distributed Storage",
+    short:
+      "A concurrent distributed file system in C. A naming server owns the tree behind an LRU cache, then clients stream straight from storage nodes.",
     blurb:
       "A concurrent distributed file system in C that splits the metadata and data planes. A Naming Server owns the directory tree behind a thread-safe LRU cache, then steps out of the way so clients stream bytes straight from storage nodes over TCP.",
     stack: ["C", "POSIX", "TCP/IP"],

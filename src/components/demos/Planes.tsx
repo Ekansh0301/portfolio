@@ -1,57 +1,110 @@
 import { useEffect, useRef, useState } from "react";
 
-const SS = [{ x: 80, y: 235 }, { x: 200, y: 235 }, { x: 320, y: 235 }];
-const CLIENT = { x: 60, y: 45 };
-const NS = { x: 340, y: 45 };
+/**
+ * The naming server's two hot structures, simulated: a path trie (a miss costs
+ * one hop per path component) in front of an LRU cache (a hit costs none),
+ * then a direct stream from whichever storage node holds the file.
+ */
+const FILES = ["/docs/paper.pdf", "/docs/notes.txt", "/docs/cv.pdf", "/src/main.c", "/src/nm.c", "/src/ss.c", "/img/a.png", "/img/b.png", "/log/0.log", "/log/1.log", "/etc/cfg", "/etc/hosts"];
+const DIRS = ["docs", "src", "img", "log", "etc"];
+const owner = (p: string) => [...p].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7) % 3;
 
 export default function Planes() {
-  const [step, setStep] = useState(0); // 0 idle, 1 lookup, 2 reply, 3 stream
+  const [cap, setCap] = useState(4);
+  const [cache, setCache] = useState<string[]>([]);
+  const [hot, setHot] = useState(true);
+  const [auto, setAuto] = useState(false);
   const [down, setDown] = useState<number | null>(null);
-  const timers = useRef<number[]>([]);
-  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  const [stat, setStat] = useState({ hit: 0, miss: 0, hops: 0 });
+  const [last, setLast] = useState<{ p: string; hit: boolean; ss: number; via: string; evicted?: string } | null>(null);
+  const st = useRef({ cache, cap, down, hot });
+  st.current = { cache, cap, down, hot };
 
-  // The naming server routes around a crashed node by handing out a replica.
-  const target = down === 0 ? 1 : 0;
-
-  const read = () => {
-    timers.current.forEach(clearTimeout);
-    setStep(1);
-    timers.current = [window.setTimeout(() => setStep(2), 900), window.setTimeout(() => setStep(3), 1800)];
+  const request = (p: string) => {
+    const { cache: C, cap: K, down: D } = st.current;
+    const hit = C.includes(p);
+    const depth = p.split("/").filter(Boolean).length;
+    let next = C.filter((x) => x !== p);
+    next = [p, ...next];
+    let evicted: string | undefined;
+    if (next.length > K) {
+      evicted = next[next.length - 1];
+      next = next.slice(0, K);
+    }
+    let ss = owner(p), via = `SS${ss + 1}`;
+    if (ss === D) { ss = (ss + 1) % 3; via = `replica SS${ss + 1} (SS${D! + 1} is down)`; }
+    setCache(next);
+    setStat((s) => ({ hit: s.hit + (hit ? 1 : 0), miss: s.miss + (hit ? 0 : 1), hops: s.hops + (hit ? 0 : depth + 1) }));
+    setLast({ p, hit, ss, via, evicted });
   };
-  const crash = () => { timers.current.forEach(clearTimeout); setStep(0); setDown((d) => (d === 0 ? null : 0)); };
 
-  const line = (a: { x: number; y: number }, b: { x: number; y: number }, on: boolean, dashed = false, colour = "var(--accent)") => (
-    <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={on ? colour : "var(--rule)"} strokeWidth={on ? 3 : 1.5} strokeDasharray={dashed ? "5 5" : "0"} style={{ transition: "all 0.4s" }} />
-  );
-  const box = (p: { x: number; y: number }, label: string, o: { hot?: boolean; dead?: boolean; w?: number } = {}) => (
-    <g>
-      <rect x={p.x - (o.w ?? 46)} y={p.y - 20} width={(o.w ?? 46) * 2} height={40} rx={8} fill={o.hot ? "color-mix(in srgb, var(--accent) 14%, var(--card))" : "var(--card)"} stroke={o.dead ? "var(--bad)" : o.hot ? "var(--accent)" : "var(--ink-3)"} strokeWidth="1.5" strokeDasharray={o.dead ? "4 3" : "0"} />
-      <text x={p.x} y={p.y + 4} textAnchor="middle" fontSize="11" style={{ fill: o.dead ? "var(--bad)" : "var(--ink)" }}>{o.dead ? `${label} ×` : label}</text>
-    </g>
-  );
+  useEffect(() => {
+    if (!auto) return;
+    const id = window.setInterval(() => {
+      const idx = st.current.hot
+        ? Math.min(FILES.length - 1, Math.floor(-Math.log(1 - Math.random() * 0.97) * 2.2))   // skewed: a few files get most traffic
+        : Math.floor(Math.random() * FILES.length);
+      request(FILES[idx]);
+    }, 380);
+    return () => clearInterval(id);
+  }, [auto]);
+
+  const reset = () => { setCache([]); setStat({ hit: 0, miss: 0, hops: 0 }); setLast(null); };
+  const total = stat.hit + stat.miss;
+  const visited = last && !last.hit ? new Set([last.p, "/" + last.p.split("/")[1]]) : new Set<string>();
 
   return (
-    <>
-      <svg viewBox="0 0 400 280" role="img" aria-label="Control plane through the naming server, data plane straight to a storage node">
-        {line(CLIENT, NS, step === 1 || step === 2, true)}
-        {SS.map((s, i) => <g key={i}>{line(NS, s, false, true)}</g>)}
-        {step === 3 && line(CLIENT, SS[target], true)}
-        <text x="200" y="38" textAnchor="middle" fontSize="9" style={{ fill: "var(--ink-3)" }}>control plane</text>
-        {step === 3 && <text x={(CLIENT.x + SS[target].x) / 2 - 6} y="150" textAnchor="end" fontSize="9" style={{ fill: "var(--accent)" }}>data plane · bytes over TCP</text>}
-        {box(CLIENT, "Client", { hot: step > 0 })}
-        {box(NS, "Naming Server", { hot: step === 1 || step === 2, w: 54 })}
-        {SS.map((s, i) => <g key={i}>{box(s, `SS${i + 1}`, { hot: step === 3 && target === i, dead: down === i })}</g>)}
-      </svg>
-      <div className="row-c">
-        <button className="sm" onClick={read}>▶ read /docs/paper.pdf</button>
-        <button className={`sm ${down === 0 ? "on" : ""}`} onClick={crash}>{down === 0 ? "revive SS1" : "crash SS1"}</button>
+    <div className="stage">
+      <div className="stage-h">
+        <span className="mono">naming server · trie + LRU · {total} requests</span>
+        <div className="row">
+          <button className={`sm ${auto ? "on" : ""}`} onClick={() => setAuto((a) => !a)}>{auto ? "stop" : "stream traffic"}</button>
+          <button className="sm" onClick={reset}>reset</button>
+        </div>
       </div>
-      <div className="readout">
-        {step === 0 && "The Naming Server owns the directory tree and nothing else."}
-        {step === 1 && <>Client asks the Naming Server where the file lives (<span className="acc">LRU cache</span> hit or tree walk).</>}
-        {step === 2 && <>Naming Server answers with {down === 0 ? <span className="ok">a live replica, SS2, because SS1 is down</span> : "SS1"}, then steps out of the way.</>}
-        {step === 3 && <>Client streams the bytes <span className="acc">straight from SS{target + 1}</span>. {down === 0 ? <span className="ok">Zero data lost.</span> : "No hop through the metadata server."}</>}
+
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.5fr) minmax(0,1fr)", gap: "0.8rem" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0,1fr))", gap: "0.35rem 0.6rem", alignContent: "start" }}>
+          {DIRS.map((d) => (
+            <div key={d}>
+              <div className="mono" style={{ color: visited.has("/" + d) ? "var(--accent)" : "var(--ink-3)", fontSize: "0.62rem" }}>/{d}</div>
+              {FILES.filter((f) => f.startsWith(`/${d}/`)).map((f) => (
+                <button key={f} onClick={() => request(f)} className="mono" style={{ display: "block", background: "none", border: 0, padding: "1px 0 1px 0.7rem", fontSize: "0.62rem", textAlign: "left", color: visited.has(f) ? "var(--accent)" : cache.includes(f) ? "var(--ok)" : "var(--ink-2)", fontWeight: cache.includes(f) ? 600 : 400, cursor: "pointer" }}>
+                  {f.split("/")[2]}{cache.includes(f) ? " ●" : ""}
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div>
+          <div className="mono dim" style={{ fontSize: "0.6rem", marginBottom: 3 }}>LRU cache · MRU first</div>
+          <div style={{ display: "grid", gap: 2 }}>
+            {Array.from({ length: cap }, (_, i) => (
+              <div key={i} className="mono" style={{ padding: "0.2rem 0.45rem", border: "1px solid var(--rule)", borderRadius: 4, fontSize: "0.62rem", background: cache[i] ? "color-mix(in srgb, var(--ok) 10%, transparent)" : "transparent", color: cache[i] ? "var(--ink)" : "var(--ink-3)", minHeight: "1.5em" }}>{cache[i] ?? "·"}</div>
+            ))}
+          </div>
+        </div>
       </div>
-    </>
+
+      <div className="row">
+        <div className="sl" style={{ flex: 1, ["--lw" as string]: "3.6rem", gridTemplateColumns: "3.6rem 1fr 1.6rem", minWidth: 150 }}>
+          <span>cache</span><input type="range" min={1} max={8} value={cap} onChange={(e) => { setCap(+e.target.value); setCache((c) => c.slice(0, +e.target.value)); }} aria-label="Cache capacity" /><span>{cap}</span>
+        </div>
+        <button className={`sm ${hot ? "on" : ""}`} onClick={() => setHot(true)}>hot files</button>
+        <button className={`sm ${!hot ? "on" : ""}`} onClick={() => setHot(false)}>uniform</button>
+        <button className={`sm ${down !== null ? "on" : ""}`} onClick={() => setDown((d) => (d === null ? 0 : null))}>{down !== null ? "revive SS1" : "crash SS1"}</button>
+      </div>
+
+      <div className="log">
+        {last ? <>
+          <div>{last.p}: <span className={last.hit ? "ok" : "acc"}>{last.hit ? "cache hit, 0 hops" : `miss, trie walk ${last.p.split("/").filter(Boolean).length + 1} hops`}</span>{last.evicted && <span className="dim"> · evicted {last.evicted}</span>}</div>
+          <div>naming server steps aside → client streams from <span className="acc">{last.via}</span></div>
+        </> : <div className="dim">Click files, or stream traffic and slide the cache size. The hit rate is the whole point of the cache.</div>}
+      </div>
+      <div className="mono" style={{ display: "flex", justifyContent: "space-between" }}>
+        <span>hit rate <span className="acc">{total ? Math.round((stat.hit / total) * 100) : 0}%</span></span>
+        <span className="dim">{stat.hops} metadata hops spent · {stat.hit * 3} avoided</span>
+      </div>
+    </div>
   );
 }

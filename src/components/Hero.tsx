@@ -1,104 +1,123 @@
 import { useEffect, useRef } from "react";
-import { profile } from "../data/content";
+import { profile, socials } from "../data/content";
 
-const MIN = 200;
-const MAX = 900;
-const REACH = 260;
+type Block = { kind: "slug" | "action" | "cue" | "dlg"; text: string };
+
+// The opening is written as a screenplay, because the research is about reading one.
+const SCRIPT: Block[] = [
+  { kind: "slug", text: "INT. LTRC, IIIT HYDERABAD - NIGHT" },
+  { kind: "action", text: "A lab that never fully powers down. A researcher reads a screenplay the way a model would: scene by scene, deciding which ones matter." },
+  { kind: "cue", text: "Ekansh" },
+  { kind: "dlg", text: "Turning research into systems." },
+  { kind: "action", text: "Then he builds what he read about. A quorum store that survives a partition. A voice assistant that never leaves the machine. A cipher suite meant to be broken." },
+  { kind: "action", text: "Everything here is a working model. Break it." },
+];
+
+const REACH = 150; // px over which attention falls off
+const FLOOR = 0.16;
 
 /**
- * The name is set in a variable serif. Each letter's weight is driven by its
- * distance to the pointer, so the name swells toward the cursor and relaxes
- * when it leaves. Reads happen before writes in each frame to avoid layout
- * thrash, and letters whose weight did not move are skipped.
+ * The cursor is the query vector. Every word is a token with a key; its opacity
+ * is its softmax attention weight, so the words nearest the pointer light up.
+ * Idle, attention is uniform and the page reads normally.
  */
-export default function Hero() {
-  const root = useRef<HTMLHeadingElement>(null);
+export default function Hero({ id }: { id: string }) {
+  const root = useRef<HTMLDivElement>(null);
+  const readout = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = root.current;
     if (!el) return;
-    const chars = Array.from(el.querySelectorAll<HTMLElement>(".ch"));
-    const w = chars.map(() => MIN);
-    const target = chars.map(() => MIN);
-    const pointer = { x: -9999, y: -9999, active: false };
-    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const words = Array.from(el.querySelectorAll<HTMLElement>(".w"));
+    const cur = words.map(() => 1);
+    const p = { x: 0, y: 0, active: false };
     let raf = 0;
-    const t0 = performance.now();
+    let top = -1;
 
     const onMove = (e: PointerEvent) => {
-      pointer.x = e.clientX;
-      pointer.y = e.clientY;
-      pointer.active = true;
+      const r = el.getBoundingClientRect();
+      p.active = e.clientX > r.left - 40 && e.clientX < r.right + 40 && e.clientY > r.top - 40 && e.clientY < r.bottom + 40;
+      p.x = e.clientX;
+      p.y = e.clientY;
     };
-    const onLeave = () => (pointer.active = false);
     window.addEventListener("pointermove", onMove, { passive: true });
-    document.addEventListener("pointerleave", onLeave);
 
-    const frame = (now: number) => {
-      const rects = chars.map((c) => c.getBoundingClientRect());
-      const t = (now - t0) / 1000;
-      chars.forEach((_, i) => {
+    const frame = () => {
+      const rects = words.map((w) => w.getBoundingClientRect());
+      const target = words.map((_, i) => {
+        if (!p.active) return 1;
         const r = rects[i];
-        let v = MIN;
-        if (pointer.active) {
-          const d = Math.hypot(pointer.x - (r.left + r.width / 2), pointer.y - (r.top + r.height / 2));
-          v = MIN + (MAX - MIN) * Math.max(0, 1 - d / REACH) ** 1.6;
-        } else if (!reduce) {
-          // Idle: a slow wave rolls through the letters so the name is never static.
-          v = MIN + 260 * Math.max(0, Math.sin(t * 0.9 - i * 0.55)) ** 3;
+        const d = Math.hypot(p.x - (r.left + r.width / 2), p.y - (r.top + r.height / 2));
+        return Math.exp(-((d / REACH) ** 2) * 2);
+      });
+      let sum = 0;
+      target.forEach((t) => (sum += t));
+      let best = 0;
+      words.forEach((w, i) => {
+        const next = cur[i] + (target[i] - cur[i]) * 0.2;
+        if (Math.abs(next - cur[i]) > 0.004) {
+          cur[i] = next;
+          w.style.opacity = String(FLOOR + (1 - FLOOR) * next);
         }
-        target[i] = v;
+        if (target[i] > target[best]) best = i;
       });
-      chars.forEach((c, i) => {
-        const next = w[i] + (target[i] - w[i]) * 0.14;
-        if (Math.abs(next - w[i]) < 0.4) return;
-        w[i] = next;
-        c.style.fontVariationSettings = `"opsz" 144, "SOFT" ${Math.round(((next - MIN) / (MAX - MIN)) * 100)}, "wght" ${Math.round(next)}`;
-      });
+      w_hl(words, p.active ? best : -1, top, (t) => (top = t));
+      if (readout.current) {
+        readout.current.innerHTML = p.active
+          ? `query = cursor · attends to <b>"${words[best].textContent}"</b> (${Math.round((target[best] / sum) * 100)}%)`
+          : "move your cursor over the page: it is the query, the words attend to it";
+      }
       raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("pointermove", onMove);
-      document.removeEventListener("pointerleave", onLeave);
     };
   }, []);
 
+  let n = 0;
   return (
-    <header id="top" className="hero">
-      <div className="wrap" style={{ width: "100%" }}>
-        <div className="eyebrow">
-          <span className="status">{profile.availability}</span>
+    <section id={id} className="page hero">
+      <div className="wrap hero-grid">
+        <div>
+          <div className="script" ref={root}>
+            {SCRIPT.map((b, i) => (
+              <p key={i} className={b.kind === "dlg" ? "dlg" : b.kind}>
+                {b.text.split(" ").map((w) => (
+                  <span key={n++} className="w">{w} </span>
+                ))}
+              </p>
+            ))}
+          </div>
+          <div className="attn" ref={readout} aria-hidden />
         </div>
-      </div>
 
-      <div className="wrap" style={{ width: "100%" }}>
-        <h1 className="hero-name" ref={root} aria-label={`${profile.first} ${profile.last}`}>
-          <span className="row" aria-hidden>
-            {[...profile.first].map((c, i) => <span className="ch" key={i}>{c}</span>)}
-          </span>
-          <span className="row two" aria-hidden>
-            {[...profile.last].map((c, i) => <span className="ch" key={i}>{c}</span>)}
-          </span>
-        </h1>
-      </div>
-
-      <div className="wrap" style={{ width: "100%" }}>
-        <div className="hero-foot">
-          <p>
-            <span className="tag">{profile.tagline}</span>
-            {profile.blurb}
-          </p>
-          <div className="cta">
-            <a className="btn solid" href="#work">See the work ↓</a>
-            <a className="btn ghost" href="#contact">Say hello</a>
+        <div className="titlepage">
+          <div className="mono dim"><span className="status">{profile.availability}</span></div>
+          <h1>{profile.first[0] + profile.first.slice(1).toLowerCase()} {profile.last[0] + profile.last.slice(1).toLowerCase()}</h1>
+          <p className="role">{profile.blurb}</p>
+          <ul className="facts">
+            <li><b>EMNLP 2026</b>Scene saliency in movie screenplays, main conference</li>
+            <li><b>SEMEVAL-26</b>Conspiracy belief detection, sole author</li>
+            <li><b>LTRC</b>Undergraduate researcher, IIIT Hyderabad</li>
+          </ul>
+          <div className="row">
+            <a className="btn solid" href="#systems">Open the reel ↓</a>
+            {socials.filter((s) => s.label !== "Email").map((s) => (
+              <a key={s.label} className="btn ghost" href={s.href} target="_blank" rel="noreferrer">{s.label} ↗</a>
+            ))}
           </div>
         </div>
-        <div className="eyebrow" style={{ marginTop: "2.2rem" }}>
-          Move your cursor over the name <b>/</b> {profile.location}
-        </div>
       </div>
-    </header>
+    </section>
   );
+}
+
+/** Keep the strongest word highlighted in the accent colour. */
+function w_hl(words: HTMLElement[], best: number, prev: number, set: (n: number) => void) {
+  if (best === prev) return;
+  if (prev >= 0) words[prev].classList.remove("hl");
+  if (best >= 0) words[best].classList.add("hl");
+  set(best);
 }
