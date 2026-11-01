@@ -95,10 +95,10 @@ export const projects: Project[] = [
   {
     title: "Anemia Detection",
     short:
-      "Photograph the inner eyelid, get a haemoglobin estimate and anaemia severity. A quality gate, UNet++ segmentation and a 1.5 MB quantized model that runs on the phone.",
+      "Photograph the inner eyelid, get a haemoglobin estimate and anaemia severity. Quality gate, UNet++ segmentation, and a 1.5 MB quantized model that runs on the phone.",
     blurb:
-      "Non-invasive anaemia screening for places without a lab. An image quality gate rejects blurry or dark captures, UNet++ segments the conjunctiva, and a quantized on-device model estimates haemoglobin and classifies severity. Doctors register patients by Aadhaar OCR and track each patient over time.",
-    stack: ["UNet++", "ONNX", "React Native"],
+      "Non-invasive anaemia screening for places without a lab, built by a team of five for SDG3 Health. A guide box frames the capture, an image-quality gate rejects blurry or dark photos, UNet++ isolates the palpebral conjunctiva, and a quantized on-device model estimates haemoglobin and classifies severity. Doctors register patients with Aadhaar OCR and track each patient's readings over time.",
+    stack: ["UNet++", "ONNX Runtime", "React Native"],
     metric: "94% Dice · 1.5 MB on-device",
     demo: "eye",
     hint: "Spoil the photo, then rescue it.",
