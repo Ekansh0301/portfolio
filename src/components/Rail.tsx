@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 /** Scene index. The active scene's bar grows, like a saliency track over the reel. */
-export default function Rail({ scenes }: { scenes: { id: string; label: string }[] }) {
+export default function Rail({ scenes }: { scenes: readonly { id: string; label: string }[] }) {
   const [active, setActive] = useState(scenes[0].id);
 
   useEffect(() => {

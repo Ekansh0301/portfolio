@@ -5,23 +5,13 @@ import { WorkPage } from "./components/Pages";
 import Research from "./components/Research";
 import Closing from "./components/Closing";
 import Contact from "./components/Contact";
-import { projects } from "./data/content";
-
-export const SCENES = [
-  { id: "opening", label: "Opening" },
-  { id: "systems", label: "Systems" },
-  { id: "intelligence", label: "Voice & crypto" },
-  { id: "applied", label: "Applied" },
-  { id: "research", label: "Research" },
-  { id: "career", label: "Career" },
-  { id: "contact", label: "Contact" },
-];
+import { projects, scenes } from "./data/content";
 
 export default function App() {
   return (
     <>
       <Nav />
-      <Rail scenes={SCENES} />
+      <Rail scenes={scenes} />
       <main>
         <Hero id="opening" />
         <WorkPage id="systems" scene={2} title={<>Systems that <em>survive</em></>} items={[projects[0], projects[1]]} first={1} />

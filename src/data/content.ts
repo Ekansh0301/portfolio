@@ -217,3 +217,14 @@ export const skillGroups: SkillGroup[] = [
 
 export const philosophy =
   "I believe the best systems are the ones you can reason about all the way down. Every abstraction, every benchmark, every line of code is a chance to make something rigorous feel effortless.";
+
+/** The reel: one entry per screen, used by the scene rail and the opening's film strip. */
+export const scenes = [
+  { id: "opening", label: "Opening" },
+  { id: "systems", label: "Systems" },
+  { id: "intelligence", label: "Voice & crypto" },
+  { id: "applied", label: "Applied" },
+  { id: "research", label: "Research" },
+  { id: "career", label: "Career" },
+  { id: "contact", label: "Contact" },
+] as const;

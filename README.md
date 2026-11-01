@@ -19,19 +19,21 @@ npm run dev
 | `src/index.css` | Tokens (light and dark) and every style. Change `--accent` and the site follows. |
 | `src/components/Hero.tsx` | The opening, written as a screenplay. The cursor is the query vector: each word's opacity is its attention weight. |
 | `src/components/Rail.tsx` | The scene index on the right edge. |
-| `src/lib/kv.ts` | The Dynamo-style cluster used by the QuorumKV demo. |
-| `src/lib/rsa.ts` | BigInt RSA, Miller-Rabin, and Pollard-Brent factoring for the CryptoStack demo. |
+| `src/lib/kv.ts` | The Dynamo-style cluster model behind the QuorumKV demo. |
+| `src/lib/aes.ts` | AES-128 from the spec (ECB and CTR), checked against the NIST/FIPS-197 vectors. |
 | `src/components/demos/*` | One demo per project and paper. |
 
-## What each demo really does
+## The demos
 
-- **QuorumKV (`Ring`)**: a working cluster. Consistent hashing, N/R/W quorums, vector clocks with sibling versions, sloppy quorums with hinted handoff, read repair and anti-entropy. Partition it, write from both sides, heal, and read back two siblings.
-- **The Director LLM (`Critics`)**: REINFORCE with a baseline, trained live. An intent-conditioned policy specialises per intent; a policy that sees one weighting collapses. A toy bandit modelling the idea, not the PPO/QLoRA pipeline.
-- **Vox (`Voice`)**: the tool router and shell/file sandbox are real code; a VRAM budget against 4 GB. Model sizes and speeds are approximate planning numbers.
-- **CryptoStack (`Cipher`)**: textbook RSA on BigInt. Factor the modulus and decrypt, or malleate the ciphertext.
-- **Anemia Detection (`Eye`)**: the app's own flow, from the team's SDG3 deck, on real pixels. A guide box frames the capture; a quality gate checks Laplacian-variance sharpness and a brightness histogram; the palpebral conjunctiva (a thin crescent, not the whole eye) is segmented and scored by Dice; the extracted ROI is shown as the analyzed image; haemoglobin and a WHO severity class follow; readings save to a patient history trend. The segmenter is a colour threshold standing in for UNet++, and the Hb mapping is a toy calibration. Upload a photo to try your own.
-- **Distributed Storage (`Planes`)**: path trie plus LRU cache in front of direct streaming from storage nodes; crash a node and a replica serves.
-- **EMNLP paper (`Gate`)**: a dual-stream gate on twelve synthetic scenes. **SemEval paper (`Density`)**: max-pool keyword spotting against mean-pool narrative density. Both illustrate the mechanism; the real results are in the paper text.
+Each shows one idea from the project and plays by itself. At most one or two controls.
+
+- **QuorumKV (`Ring`)**: the real cluster model (N=4, W=3, R=2 like the repo's defaults) under live traffic. Click nodes to crash them; hinted handoff and quorums keep it answering until too many are gone, and the counters stay honest.
+- **The Director LLM (`Critics`)**: the README's intent weightings (explore, action, dialogue) and its supervised-vs-PPO critic scores, with the Fireball example.
+- **Vox (`Voice`)**: hold the button or Right Ctrl. Stage timings are the README's measurements; the risky command asks first.
+- **CryptoStack (`Cipher`)**: the same image through AES-ECB and AES-CTR. In ECB the shape survives. Lists the twenty primitives by phase.
+- **Anemia Detection (`Eye`)**: one patient over three visits through the app's flow: guide box, quality gate (Laplacian sharpness and brightness, computed on pixels), conjunctiva segmentation, haemoglobin, severity, history. Segmenter is a colour threshold standing in for UNet++; Hb mapping is a toy calibration. The repository is private.
+- **Distributed Storage (`Planes`)**: the Naming Server answers where a file is and steps out; bytes flow client to storage server directly. Click a storage server to drop it and bring it back.
+- **EMNLP paper (`Gate`)**: a dual-stream gate on twelve synthetic scenes. **SemEval paper (`Density`)**: max-pool keyword spotting against mean-pool narrative density. Both illustrate the mechanism; the paper's results are in the text above them.
 
 ## Notes
 

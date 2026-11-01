@@ -1,109 +1,114 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * The naming server's two hot structures, simulated: a path trie (a miss costs
- * one hop per path component) in front of an LRU cache (a hit costs none),
- * then a direct stream from whichever storage node holds the file.
+ * The idea at the heart of the project: the Naming Server answers "where is it?"
+ * and then steps out of the way, so file bytes flow client ↔ storage server
+ * directly. Two clients loop through reads; click a storage server to drop it.
+ * A reconnecting server re-syncs its index with the Naming Server's tree.
  */
-const FILES = ["/docs/paper.pdf", "/docs/notes.txt", "/docs/cv.pdf", "/src/main.c", "/src/nm.c", "/src/ss.c", "/img/a.png", "/img/b.png", "/log/0.log", "/log/1.log", "/etc/cfg", "/etc/hosts"];
-const DIRS = ["docs", "src", "img", "log", "etc"];
-const owner = (p: string) => [...p].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7) % 3;
+const NS = { x: 200, y: 36 };
+const CLIENTS = [{ x: 56, y: 118, n: "Client A" }, { x: 344, y: 118, n: "Client B" }];
+const SS = [{ x: 70, y: 232 }, { x: 200, y: 232 }, { x: 330, y: 232 }];
+const FILES = ["/docs/paper.pdf", "/src/main.c", "/media/talk.mp3", "/docs/paper.pdf", "/log/0.log", "/src/main.c"]; // repeats → LRU hits
+const OWNER = [0, 1, 2, 0, 1, 1];
+const CYCLE = 4600;
+
+const lerp = (a: { x: number; y: number }, b: { x: number; y: number }, t: number) => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
 
 export default function Planes() {
-  const [cap, setCap] = useState(4);
-  const [cache, setCache] = useState<string[]>([]);
-  const [hot, setHot] = useState(true);
-  const [auto, setAuto] = useState(false);
+  const [t, setT] = useState(0);
   const [down, setDown] = useState<number | null>(null);
-  const [stat, setStat] = useState({ hit: 0, miss: 0, hops: 0 });
-  const [last, setLast] = useState<{ p: string; hit: boolean; ss: number; via: string; evicted?: string } | null>(null);
-  const st = useRef({ cache, cap, down, hot });
-  st.current = { cache, cap, down, hot };
+  const [sync, setSync] = useState<number | null>(null);
+  const start = useRef(performance.now());
+  const downRef = useRef<number | null>(null);
+  const mb = useRef(0);
+  const prev = useRef(performance.now());
 
-  const request = (p: string) => {
-    const { cache: C, cap: K, down: D } = st.current;
-    const hit = C.includes(p);
-    const depth = p.split("/").filter(Boolean).length;
-    let next = C.filter((x) => x !== p);
-    next = [p, ...next];
-    let evicted: string | undefined;
-    if (next.length > K) {
-      evicted = next[next.length - 1];
-      next = next.slice(0, K);
-    }
-    let ss = owner(p), via = `SS${ss + 1}`;
-    if (ss === D) { ss = (ss + 1) % 3; via = `replica SS${ss + 1} (SS${D! + 1} is down)`; }
-    setCache(next);
-    setStat((s) => ({ hit: s.hit + (hit ? 1 : 0), miss: s.miss + (hit ? 0 : 1), hops: s.hops + (hit ? 0 : depth + 1) }));
-    setLast({ p, hit, ss, via, evicted });
-  };
+  useEffect(() => { downRef.current = down; }, [down]);
 
   useEffect(() => {
-    if (!auto) return;
-    const id = window.setInterval(() => {
-      const idx = st.current.hot
-        ? Math.min(FILES.length - 1, Math.floor(-Math.log(1 - Math.random() * 0.97) * 2.2))   // skewed: a few files get most traffic
-        : Math.floor(Math.random() * FILES.length);
-      request(FILES[idx]);
-    }, 380);
-    return () => clearInterval(id);
-  }, [auto]);
+    let raf = 0;
+    const loop = (now: number) => {
+      const dt = now - prev.current;
+      prev.current = now;
+      const el = now - start.current;
+      CLIENTS.forEach((_, ci) => {
+        const tt = el + (ci ? CYCLE / 2 : 0);
+        const p = (tt % CYCLE) / CYCLE;
+        const f = (Math.floor(tt / CYCLE) * 2 + ci) % FILES.length;
+        if (p >= 0.27 && downRef.current !== OWNER[f]) mb.current += dt * 0.011; // bytes only flow while streaming
+      });
+      setT(el);
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
-  const reset = () => { setCache([]); setStat({ hit: 0, miss: 0, hops: 0 }); setLast(null); };
-  const total = stat.hit + stat.miss;
-  const visited = last && !last.hit ? new Set([last.p, "/" + last.p.split("/")[1]]) : new Set<string>();
+  const drop = (i: number) => {
+    if (down === i) { setDown(null); setSync(i); window.setTimeout(() => setSync(null), 1800); }
+    else setDown(i);
+  };
+
+  const rows = CLIENTS.map((c, ci) => {
+    const tt = t + (ci ? CYCLE / 2 : 0);
+    const cyc = Math.floor(tt / CYCLE), p = (tt % CYCLE) / CYCLE;
+    const f = (cyc * 2 + ci) % FILES.length;
+    const ss = OWNER[f];
+    return { c, ci, p, f, ss, dead: down === ss, cyc };
+  });
+  // Each lookup is one request plus one reply, and the count is a pure function of time.
+  const msgs = rows.reduce((a, r) => a + 2 * (r.cyc + (r.p >= 0.27 ? 1 : 0)), 0);
 
   return (
     <div className="stage">
       <div className="stage-h">
-        <span className="mono">naming server · trie + LRU · {total} requests</span>
-        <div className="row">
-          <button className={`sm ${auto ? "on" : ""}`} onClick={() => setAuto((a) => !a)}>{auto ? "stop" : "stream traffic"}</button>
-          <button className="sm" onClick={reset}>reset</button>
-        </div>
+        <span className="mono">control plane vs data plane · click a storage server</span>
       </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.5fr) minmax(0,1fr)", gap: "0.8rem" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0,1fr))", gap: "0.35rem 0.6rem", alignContent: "start" }}>
-          {DIRS.map((d) => (
-            <div key={d}>
-              <div className="mono" style={{ color: visited.has("/" + d) ? "var(--accent)" : "var(--ink-3)", fontSize: "0.62rem" }}>/{d}</div>
-              {FILES.filter((f) => f.startsWith(`/${d}/`)).map((f) => (
-                <button key={f} onClick={() => request(f)} className="mono" style={{ display: "block", background: "none", border: 0, padding: "1px 0 1px 0.7rem", fontSize: "0.62rem", textAlign: "left", color: visited.has(f) ? "var(--accent)" : cache.includes(f) ? "var(--ok)" : "var(--ink-2)", fontWeight: cache.includes(f) ? 600 : 400, cursor: "pointer" }}>
-                  {f.split("/")[2]}{cache.includes(f) ? " ●" : ""}
-                </button>
-              ))}
-            </div>
-          ))}
-        </div>
-        <div>
-          <div className="mono dim" style={{ fontSize: "0.6rem", marginBottom: 3 }}>LRU cache · MRU first</div>
-          <div style={{ display: "grid", gap: 2 }}>
-            {Array.from({ length: cap }, (_, i) => (
-              <div key={i} className="mono" style={{ padding: "0.2rem 0.45rem", border: "1px solid var(--rule)", borderRadius: 4, fontSize: "0.62rem", background: cache[i] ? "color-mix(in srgb, var(--ok) 10%, transparent)" : "transparent", color: cache[i] ? "var(--ink)" : "var(--ink-3)", minHeight: "1.5em" }}>{cache[i] ?? "·"}</div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="row">
-        <div className="sl" style={{ flex: 1, ["--lw" as string]: "3.6rem", gridTemplateColumns: "3.6rem 1fr 1.6rem", minWidth: 150 }}>
-          <span>cache</span><input type="range" min={1} max={8} value={cap} onChange={(e) => { setCap(+e.target.value); setCache((c) => c.slice(0, +e.target.value)); }} aria-label="Cache capacity" /><span>{cap}</span>
-        </div>
-        <button className={`sm ${hot ? "on" : ""}`} onClick={() => setHot(true)}>hot files</button>
-        <button className={`sm ${!hot ? "on" : ""}`} onClick={() => setHot(false)}>uniform</button>
-        <button className={`sm ${down !== null ? "on" : ""}`} onClick={() => setDown((d) => (d === null ? 0 : null))}>{down !== null ? "revive SS1" : "crash SS1"}</button>
-      </div>
-
-      <div className="log">
-        {last ? <>
-          <div>{last.p}: <span className={last.hit ? "ok" : "acc"}>{last.hit ? "cache hit, 0 hops" : `miss, trie walk ${last.p.split("/").filter(Boolean).length + 1} hops`}</span>{last.evicted && <span className="dim"> · evicted {last.evicted}</span>}</div>
-          <div>naming server steps aside → client streams from <span className="acc">{last.via}</span></div>
-        </> : <div className="dim">Click files, or stream traffic and slide the cache size. The hit rate is the whole point of the cache.</div>}
-      </div>
-      <div className="mono" style={{ display: "flex", justifyContent: "space-between" }}>
-        <span>hit rate <span className="acc">{total ? Math.round((stat.hit / total) * 100) : 0}%</span></span>
-        <span className="dim">{stat.hops} metadata hops spent · {stat.hit * 3} avoided</span>
+      <svg viewBox="0 0 400 276" role="img" aria-label="Clients ask the Naming Server where a file is, then stream directly from a storage server" style={{ maxHeight: 290 }}>
+        {SS.map((s, i) => <line key={i} x1={NS.x} y1={NS.y + 18} x2={s.x} y2={s.y - 20} stroke="var(--rule)" strokeDasharray="3 4" />)}
+        {rows.map(({ c, ci, p, ss, dead }) => {
+          const meta = p < 0.27;
+          const ssn = SS[ss];
+          const toNs = p < 0.13 ? lerp(c, NS, p / 0.13) : null;
+          const back = p >= 0.13 && p < 0.27 ? lerp(NS, c, (p - 0.13) / 0.14) : null;
+          return (
+            <g key={ci}>
+              <line x1={c.x} y1={c.y} x2={NS.x} y2={NS.y} stroke="var(--ink-3)" strokeDasharray="4 4" strokeWidth="1.2" opacity="0.6" />
+              <line x1={c.x} y1={c.y} x2={ssn.x} y2={ssn.y} stroke={!meta && !dead ? "var(--accent)" : "var(--rule)"} strokeWidth={!meta && !dead ? 3 : 1.5} style={{ transition: "stroke 0.3s" }} />
+              {toNs && <circle cx={toNs.x} cy={toNs.y} r="4.5" fill="var(--ink)" />}
+              {back && <circle cx={back.x} cy={back.y} r="4.5" fill="var(--accent)" />}
+              {!meta && !dead && Array.from({ length: 7 }, (_, k) => {
+                const q = (((p - 0.27) * 5.2 + k / 7) % 1 + 1) % 1;
+                const d = lerp(ssn, c, q);
+                return <rect key={k} x={d.x - 3} y={d.y - 3} width="6" height="6" rx="1.5" fill="var(--accent)" />;
+              })}
+              {!meta && dead && <text x={(c.x + ssn.x) / 2} y={(c.y + ssn.y) / 2} textAnchor="middle" fontSize="12" style={{ fill: "var(--bad)" }}>unavailable ✗</text>}
+            </g>
+          );
+        })}
+        {/* nodes */}
+        <rect x={NS.x - 82} y={NS.y - 18} width="164" height="36" rx="9" fill="var(--card)" stroke="var(--ink-2)" strokeWidth="1.5" />
+        <text x={NS.x} y={NS.y - 2} textAnchor="middle" fontSize="11" style={{ fill: "var(--ink)" }}>Naming Server</text>
+        <text x={NS.x} y={NS.y + 11} textAnchor="middle" fontSize="8.5" style={{ fill: "var(--ink-3)" }}>tree + LRU cache · no file bytes</text>
+        {CLIENTS.map((c, ci) => (
+          <g key={c.n}>
+            <rect x={c.x - 34} y={c.y - 15} width="68" height="30" rx="8" fill="var(--card)" stroke="var(--ink-2)" strokeWidth="1.5" />
+            <text x={c.x} y={c.y + 4} textAnchor="middle" fontSize="10.5" style={{ fill: "var(--ink)" }}>{c.n}</text>
+            <text x={c.x} y={c.y - 22} textAnchor="middle" fontSize="8.5" style={{ fill: "var(--accent)" }}>{FILES[rows[ci].f]}</text>
+          </g>
+        ))}
+        {SS.map((s, i) => (
+          <g key={i} role="button" tabIndex={0} aria-label={`Storage server ${i + 1}: ${down === i ? "disconnected, click to reconnect" : "click to disconnect"}`} style={{ cursor: "pointer", outline: "none" }} onClick={() => drop(i)} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), drop(i))}>
+            <rect x={s.x - 46} y={s.y - 20} width="92" height="40" rx="9" fill={down === i ? "var(--bg-2)" : "var(--card)"} stroke={down === i ? "var(--bad)" : sync === i ? "var(--ok)" : "var(--ink-2)"} strokeWidth="1.5" strokeDasharray={down === i ? "4 3" : "0"} />
+            <text x={s.x} y={s.y - 2} textAnchor="middle" fontSize="11" style={{ fill: down === i ? "var(--bad)" : "var(--ink)" }}>Storage {i + 1}</text>
+            <text x={s.x} y={s.y + 11} textAnchor="middle" fontSize="8.5" style={{ fill: sync === i ? "var(--ok)" : "var(--ink-3)" }}>{down === i ? "disconnected" : sync === i ? "re-syncing index…" : "POSIX threads"}</text>
+          </g>
+        ))}
+      </svg>
+      <div className="mono" style={{ display: "flex", justifyContent: "space-between", gap: "0.8rem", flexWrap: "wrap" }}>
+        <span>Naming Server handled <b className="acc">{msgs}</b> tiny messages</span>
+        <span>storage servers streamed <b className="acc">{Math.round(mb.current)}</b> MB directly</span>
       </div>
     </div>
   );

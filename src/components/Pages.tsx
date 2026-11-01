@@ -19,8 +19,8 @@ export function Slate({ scene, title, note }: { scene: number; title: React.Reac
   );
 }
 
-export function Card({ n, title, metric, txt, chips, href, children }: {
-  n: string; title: string; metric?: string; txt: string; chips?: string[]; href?: string; children: React.ReactNode;
+export function Card({ n, title, metric, txt, chips, href, priv, children }: {
+  n: string; title: string; metric?: string; txt: string; chips?: string[]; href?: string; priv?: boolean; children: React.ReactNode;
 }) {
   return (
     <article className="card">
@@ -32,7 +32,7 @@ export function Card({ n, title, metric, txt, chips, href, children }: {
       {children}
       <div className="card-foot">
         <div className="chips">{chips?.map((c) => <span className="chip" key={c}>{c}</span>)}</div>
-        {href && <a className="link" href={href} target="_blank" rel="noreferrer">source ↗</a>}
+        {href ? <a className="link" href={href} target="_blank" rel="noreferrer">source ↗</a> : priv && <span className="mono dim" title="The code is not public">private repository</span>}
       </div>
     </article>
   );
@@ -49,7 +49,7 @@ export function WorkPage({ id, scene, title, items, first, alt }: {
           {items.map((p, i) => {
             const Demo = demos[p.demo];
             return (
-              <Card key={p.title} n={String(first + i).padStart(2, "0")} title={p.title} metric={p.metric} txt={p.short} chips={p.stack} href={p.href}>
+              <Card key={p.title} n={String(first + i).padStart(2, "0")} title={p.title} metric={p.metric} txt={p.short} chips={p.stack} href={p.href} priv={!p.href}>
                 <Demo />
               </Card>
             );

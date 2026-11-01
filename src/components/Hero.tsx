@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { profile, socials } from "../data/content";
+import { profile, scenes, socials } from "../data/content";
 
 type Block = { kind: "slug" | "action" | "cue" | "dlg"; text: string };
 
@@ -79,37 +79,49 @@ export default function Hero({ id }: { id: string }) {
   let n = 0;
   return (
     <section id={id} className="page hero">
-      <div className="wrap hero-grid">
-        <div>
-          <div className="script" ref={root}>
-            {SCRIPT.map((b, i) => (
-              <p key={i} className={b.kind === "dlg" ? "dlg" : b.kind}>
-                {b.text.split(" ").map((w) => (
-                  <span key={n++} className="w">{w} </span>
-                ))}
-              </p>
-            ))}
+      <div className="hero-main">
+        <div className="wrap hero-grid">
+          <div className="hero-left">
+            <div className="script" ref={root}>
+              {SCRIPT.map((b, i) => (
+                <p key={i} className={b.kind === "dlg" ? "dlg" : b.kind}>
+                  {b.text.split(" ").map((w) => (
+                    <span key={n++} className="w">{w} </span>
+                  ))}
+                </p>
+              ))}
+            </div>
+            <div className="attn" ref={readout} aria-hidden />
           </div>
-          <div className="attn" ref={readout} aria-hidden />
-        </div>
 
-        <div className="titlepage">
-          <div className="mono dim"><span className="status">{profile.availability}</span></div>
-          <h1>{profile.first[0] + profile.first.slice(1).toLowerCase()} {profile.last[0] + profile.last.slice(1).toLowerCase()}</h1>
-          <p className="role">{profile.blurb}</p>
-          <ul className="facts">
-            <li><b>EMNLP 2026</b>Scene saliency in movie screenplays, main conference</li>
-            <li><b>SEMEVAL-26</b>Conspiracy belief detection, sole author</li>
-            <li><b>LTRC</b>Undergraduate researcher, IIIT Hyderabad</li>
-          </ul>
-          <div className="row">
-            <a className="btn solid" href="#systems">Open the reel ↓</a>
-            {socials.filter((s) => s.label !== "Email").map((s) => (
-              <a key={s.label} className="btn ghost" href={s.href} target="_blank" rel="noreferrer">{s.label} ↗</a>
-            ))}
+          <div className="titlepage">
+            <div className="mono dim"><span className="status">{profile.availability}</span></div>
+            <h1>{profile.first[0] + profile.first.slice(1).toLowerCase()} {profile.last[0] + profile.last.slice(1).toLowerCase()}</h1>
+            <p className="role">{profile.blurb}</p>
+            <ul className="facts">
+              <li><b>EMNLP 2026</b><span>Scene saliency in movie screenplays, main conference</span></li>
+              <li><b>SEMEVAL-26</b><span>Conspiracy belief detection, sole author</span></li>
+              <li><b>LTRC</b><span>Undergraduate researcher, IIIT Hyderabad</span></li>
+            </ul>
+            <div className="row">
+              <a className="btn solid" href="#systems">Open the reel ↓</a>
+              {socials.filter((x) => x.label !== "Email").map((x) => (
+                <a key={x.label} className="btn ghost" href={x.href} target="_blank" rel="noreferrer">{x.label} ↗</a>
+              ))}
+            </div>
           </div>
         </div>
       </div>
+
+      <nav className="wrap reel" aria-label="Scenes">
+        {scenes.map((x, i) => (
+          <a key={x.id} href={`#${x.id}`} className={i === 0 ? "on" : ""}>
+            <span className="tick" />
+            <span className="mono">{String(i + 1).padStart(2, "0")}</span>
+            <span className="name">{x.label}</span>
+          </a>
+        ))}
+      </nav>
     </section>
   );
 }

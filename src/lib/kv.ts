@@ -8,7 +8,7 @@ export type Version = { value: string; vc: VC };
 export type Hint = { target: number; key: string; v: Version };
 export type KNode = { id: number; alive: boolean; pos: number; store: Map<string, Version[]>; hints: Hint[] };
 
-export const N = 3;
+export const N = 4; // QuorumKV defaults: N=4, R=2, W=3
 export const NODES = 8;
 
 export function hash(s: string) {
@@ -79,13 +79,13 @@ export class Cluster {
     const coord = walk.find((id) => this.reach(client, id));
     if (coord === undefined) {
       this.say("PUT failed: no reachable node");
-      return { ok: false, vc: ctx };
+      return { ok: false, vc: ctx, acks: 0, coord: -1, stand: [] as { holder: number; target: number }[], pref: walk.slice(0, N) };
     }
     const vc = { ...ctx, [coord]: (ctx[coord] ?? 0) + 1 };
     const v: Version = { value, vc };
     const spares = walk.slice(N).filter((id) => this.reach(client, id));
     let acks = 0;
-    const stand: string[] = [];
+    const stand: { holder: number; target: number }[] = [];
     for (const p of walk.slice(0, N)) {
       if (this.reach(client, p)) {
         this.apply(p, key, v);
@@ -93,22 +93,22 @@ export class Cluster {
       } else if (spares.length) {
         const s = spares.shift()!;
         this.nodes[s].hints.push({ target: p, key, v });
-        stand.push(`n${s} holds a hint for n${p}`);
+        stand.push({ holder: s, target: p });
         acks++;
       }
     }
     const ok = acks >= W;
     this.say(
-      `PUT ${key}=${value} via n${coord} ${fmtVC(vc)}: ${acks}/${W} acks${stand.length ? " (" + stand.join(", ") + ")" : ""}${ok ? "" : " — W not met, write reported failed"}`,
+      `PUT ${key}=${value} via n${coord} ${fmtVC(vc)}: ${acks}/${W} acks${stand.length ? " (" + stand.map((x) => `n${x.holder} holds a hint for n${x.target}`).join(", ") + ")" : ""}${ok ? "" : " — W not met, write reported failed"}`,
     );
-    return { ok, vc };
+    return { ok, vc, acks, coord, stand, pref: walk.slice(0, N) };
   }
 
   get(client: number, key: string, R: number) {
     const resp = this.pref(key).filter((id) => this.reach(client, id));
     if (resp.length < R) {
       this.say(`GET ${key}: only ${resp.length} replicas reachable, need R=${R}`);
-      return { ok: false, versions: [] as Version[], ctx: {} as VC };
+      return { ok: false, versions: [] as Version[], ctx: {} as VC, used: resp };
     }
     const used = resp.slice(0, Math.max(R, 1));
     const versions = reduce(used.flatMap((id) => this.nodes[id].store.get(key) ?? []));
@@ -123,7 +123,7 @@ export class Cluster {
     this.say(
       `GET ${key} from ${used.map((i) => "n" + i).join(",")}: ${versions.length ? versions.map((v) => `"${v.value}"`).join(" | ") : "∅"}${versions.length > 1 ? " — concurrent siblings" : ""}${repaired ? ` · read repair fixed ${repaired}` : ""}`,
     );
-    return { ok: true, versions, ctx: mergeVC(versions) };
+    return { ok: true, versions, ctx: mergeVC(versions), used };
   }
 
   /** Deliver stored hints whose owner is reachable from the holder again. */

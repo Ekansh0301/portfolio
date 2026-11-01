@@ -1,122 +1,90 @@
-import { useMemo, useReducer, useRef, useState } from "react";
-import { Cluster, N, fmtVC, hash, type VC } from "../../lib/kv";
+import { useEffect, useReducer, useRef, useState } from "react";
+import { Cluster, N, hash, type VC } from "../../lib/kv";
 
-const R0 = 92;
-const at = (t: number, r: number) => [150 + r * Math.sin(t * 2 * Math.PI), 130 - r * Math.cos(t * 2 * Math.PI)];
+const R_Q = 2, W_Q = 3; // QuorumKV's default N=4, R=2, W=3
+const KEYS = ["cart:7", "user:42", "feed:ekansh", "order:1180", "session:ab91", "cfg:prod", "profile:3", "chat:9"];
+const CX = 180, CY = 138, RAD = 104;
+const at = (t: number, r = RAD) => [CX + r * Math.sin(t * 2 * Math.PI), CY - r * Math.cos(t * 2 * Math.PI)];
 
-/** Run the real cluster model from lib/kv.ts. Two clients, one on each side of a partition. */
+type Flash = { id: number; key: string; op: "PUT" | "GET"; ok: boolean; reps: number[]; hints: { holder: number; target: number }[]; line: string };
+
+/**
+ * The real cluster model (src/lib/kv.ts) under steady traffic. Crash nodes and
+ * watch the system keep answering: hinted handoff covers writes, quorums cover reads.
+ */
 export default function Ring() {
   const cl = useRef<Cluster>(null as unknown as Cluster);
   if (!cl.current) cl.current = new Cluster();
   const c = cl.current;
   const [, bump] = useReducer((x: number) => x + 1, 0);
   const ctx = useRef<Record<string, VC>>({});
+  const n = useRef(0);
+  const stats = useRef({ w: 0, wOk: 0, r: 0, rOk: 0 });
+  const [flash, setFlash] = useState<Flash | null>(null);
 
-  // Default to a key whose replicas straddle the partition, so the conflict demo works.
-  const startKey = useMemo(() => {
-    const probe = new Cluster();
-    return ["cart", "profile", "session", "feed", "order", "cfg"].find((k) => {
-      const s = new Set(probe.pref(k).map(probe.side));
-      return s.size === 2;
-    }) ?? "cart";
-  }, []);
-  const [client, setClient] = useState(0);
-  const [key, setKey] = useState(startKey);
-  const [val, setVal] = useState("milk");
-  const [W, setW] = useState(2);
-  const [R, setR] = useState(2);
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      const i = n.current++;
+      const key = KEYS[i % KEYS.length];
+      const st = stats.current;
+      if (i % 3 !== 2) {
+        const r = c.put(0, key, `v${i}`, ctx.current[key] ?? {}, W_Q);
+        ctx.current[key] = r.vc;
+        st.w++; if (r.ok) st.wOk++;
+        const live = r.pref.filter((p) => c.nodes[p].alive);
+        setFlash({ id: i, key, op: "PUT", ok: r.ok, reps: live, hints: r.stand, line: `PUT ${key} → ${live.map((p) => "n" + p).join(" ")}${r.stand.length ? ` + hint on ${r.stand.map((s) => "n" + s.holder).join(", ")}` : ""} · ${r.acks} acks (W=${W_Q})` });
+      } else {
+        const r = c.get(0, key, R_Q);
+        st.r++; if (r.ok) st.rOk++;
+        if (r.ok) ctx.current[key] = r.ctx;
+        setFlash({ id: i, key, op: "GET", ok: r.ok, reps: r.used, hints: [], line: `GET ${key} ← ${r.used.map((p) => "n" + p).join(" ") || "nobody"} · ${r.ok ? "served" : `need R=${R_Q}, too few replicas`}` });
+      }
+      c.handoff();
+      bump();
+    }, 1100);
+    return () => clearInterval(id);
+  }, [c]);
 
-  const pref = c.pref(key);
-  const k = (n = 0) => `${client}|${key}${n}`;
-  const act = (f: () => void) => { f(); bump(); };
-
-  const put = () => act(() => {
-    const r = c.put(client, key, val, ctx.current[k()] ?? {}, W);
-    ctx.current[k()] = r.vc;
-  });
-  const get = () => act(() => {
-    const r = c.get(client, key, R);
-    if (r.ok) ctx.current[k()] = r.ctx;
-  });
-  const toggle = (id: number) => act(() => {
-    c.nodes[id].alive = !c.nodes[id].alive;
-    c.say(`n${id} ${c.nodes[id].alive ? "recovered" : "crashed"}`);
-    c.handoff();
-  });
-  const part = () => act(() => {
-    c.partitioned = !c.partitioned;
-    c.say(c.partitioned ? "network partitioned: east {0-3} | west {4-7}" : "partition healed");
-    c.handoff();
-  });
-
-  const kp = at(hash(key), R0);
-  const rows = c.nodes.flatMap((n) => {
-    const out: { id: number; text: string; kind: "own" | "hint" }[] = [];
-    if (pref.includes(n.id)) out.push({ id: n.id, kind: "own", text: (n.store.get(key) ?? []).map((v) => `"${v.value}" ${fmtVC(v.vc)}`).join("  |  ") || "—" });
-    n.hints.filter((h) => h.key === key).forEach((h) => out.push({ id: n.id, kind: "hint", text: `hint for n${h.target}: "${h.v.value}"` }));
-    return out;
-  });
+  const toggle = (id: number) => { c.nodes[id].alive = !c.nodes[id].alive; c.handoff(); bump(); };
+  const down = c.nodes.filter((x) => !x.alive).length;
+  const st = stats.current;
+  const kp = flash ? at(hash(flash.key)) : null;
 
   return (
     <div className="stage">
       <div className="stage-h">
-        <span className="mono">N={N} · real vector clocks · click a node to crash it</span>
-        <div className="tabs">
-          {[0, 1].map((i) => <button key={i} className={`sm ${client === i ? "on" : ""}`} onClick={() => setClient(i)}>client {i ? "B · west" : "A · east"}</button>)}
-        </div>
+        <span className="mono">8 nodes · N={N} · W={W_Q} · R={R_Q} · live traffic</span>
+        {down > 0 && <button className="sm" onClick={() => { c.nodes.forEach((x) => (x.alive = true)); c.handoff(); bump(); }}>revive all</button>}
       </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "0.8rem", alignItems: "center" }}>
-        <svg viewBox="0 0 300 260" role="img" aria-label="Hash ring of eight nodes">
-          <circle cx="150" cy="130" r={R0} fill="none" stroke="var(--rule)" strokeWidth="2" />
-          {c.partitioned && <line x1="150" y1="14" x2="150" y2="246" stroke="var(--bad)" strokeDasharray="4 4" strokeWidth="1.5" />}
-          <circle cx={kp[0]} cy={kp[1]} r="5" fill="var(--accent)" />
-          <text x={kp[0]} y={kp[1] + (kp[1] < 130 ? -9 : 16)} textAnchor="middle" fontSize="9" style={{ fill: "var(--accent)" }}>{key}</text>
-          {c.nodes.map((n) => {
-            const [x, y] = at(n.pos, R0);
-            const p = pref.indexOf(n.id);
-            const reachable = c.reach(client, n.id);
-            return (
-              <g key={n.id} role="button" tabIndex={0} aria-label={`node ${n.id} ${n.alive ? "up" : "down"}`} style={{ cursor: "pointer", outline: "none" }}
-                onClick={() => toggle(n.id)} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), toggle(n.id))}>
-                <circle cx={x} cy={y} r="15" fill={p >= 0 && n.alive ? "var(--accent)" : "var(--card)"} stroke={!n.alive ? "var(--bad)" : reachable ? "var(--ink-2)" : "var(--ink-3)"} strokeWidth="2" strokeDasharray={!n.alive ? "3 3" : "0"} opacity={reachable || !n.alive ? 1 : 0.4} />
-                <text x={x} y={y + 3.5} textAnchor="middle" fontSize="10" style={{ fill: p >= 0 && n.alive ? "var(--accent-ink)" : !n.alive ? "var(--bad)" : "var(--ink)" }}>{n.alive ? n.id : "×"}</text>
-                <text x={x + (x > 150 ? 22 : -22)} y={y + 3} textAnchor="middle" fontSize="7.5" style={{ fill: "var(--ink-3)" }}>{c.digest(n.id)}</text>
-              </g>
-            );
-          })}
-          <text x="150" y="128" textAnchor="middle" fontSize="9">{pref.map((i) => "n" + i).join(" → ")}</text>
-          <text x="150" y="141" textAnchor="middle" fontSize="8" style={{ fill: "var(--ink-3)" }}>preference list</text>
-        </svg>
-
-        <div style={{ display: "grid", gap: "0.45rem" }}>
-          <div className="row">
-            <input className="field" style={{ width: "5.2rem" }} value={key} onChange={(e) => setKey(e.target.value || "cart")} aria-label="Key" />
-            <span className="dim mono">=</span>
-            <input className="field" style={{ width: "5.2rem" }} value={val} onChange={(e) => setVal(e.target.value)} aria-label="Value" />
-          </div>
-          <div className="sl" style={{ ["--lw" as string]: "1.6rem" }}><span>W</span><input type="range" min={1} max={N} value={W} onChange={(e) => setW(+e.target.value)} aria-label="Write quorum" /><span>{W}</span></div>
-          <div className="sl" style={{ ["--lw" as string]: "1.6rem" }}><span>R</span><input type="range" min={1} max={N} value={R} onChange={(e) => setR(+e.target.value)} aria-label="Read quorum" /><span>{R}</span></div>
-          <div className="mono dim" style={{ fontSize: "0.62rem" }}>R+W {R + W > N ? ">" : "≤"} N: {R + W > N ? "reads overlap writes" : "stale reads possible"}</div>
-          <div className="row">
-            <button className="sm on" onClick={put}>put</button>
-            <button className="sm" onClick={get}>get</button>
-            <button className={`sm ${c.partitioned ? "on" : ""}`} onClick={part}>{c.partitioned ? "heal" : "partition"}</button>
-            <button className="sm" onClick={() => act(() => { c.antiEntropy(); })}>anti-entropy</button>
-          </div>
-        </div>
+      <svg viewBox="0 0 360 276" role="img" aria-label="Consistent hash ring carrying live requests" style={{ maxHeight: 300 }}>
+        <circle cx={CX} cy={CY} r={RAD} fill="none" stroke="var(--rule)" strokeWidth="2" />
+        {flash && kp && (
+          <g key={flash.id} style={{ animation: "fadeOut 1s ease-out forwards" }}>
+            {flash.reps.map((p) => { const [x, y] = at(c.nodes[p].pos); return <line key={p} x1={kp[0]} y1={kp[1]} x2={x} y2={y} stroke="var(--accent)" strokeWidth="2" />; })}
+            {flash.hints.map((h) => { const [x, y] = at(c.nodes[h.holder].pos); return <line key={h.holder + "-" + h.target} x1={kp[0]} y1={kp[1]} x2={x} y2={y} stroke="var(--accent)" strokeWidth="2" strokeDasharray="4 4" />; })}
+            <circle cx={kp[0]} cy={kp[1]} r="6" fill="var(--accent)" />
+          </g>
+        )}
+        {c.nodes.map((nd) => {
+          const [x, y] = at(nd.pos);
+          const hot = flash?.reps.includes(nd.id) || flash?.hints.some((h) => h.holder === nd.id);
+          return (
+            <g key={nd.id} role="button" tabIndex={0} aria-label={`Node ${nd.id}: ${nd.alive ? "up, click to crash" : "down, click to revive"}`} style={{ cursor: "pointer", outline: "none" }}
+              onClick={() => toggle(nd.id)} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), toggle(nd.id))}>
+              <circle cx={x} cy={y} r="17" fill={nd.alive ? (hot ? "color-mix(in srgb, var(--accent) 22%, var(--card))" : "var(--card)") : "var(--bg-2)"} stroke={nd.alive ? (hot ? "var(--accent)" : "var(--ink-3)") : "var(--bad)"} strokeWidth="2" strokeDasharray={nd.alive ? "0" : "3 3"} style={{ transition: "all 0.3s" }} />
+              <text x={x} y={y + 4} textAnchor="middle" fontSize="11" style={{ fill: nd.alive ? "var(--ink)" : "var(--bad)" }}>{nd.alive ? nd.id : "×"}</text>
+              {nd.hints.length > 0 && <text x={x} y={y + 31} textAnchor="middle" fontSize="8" style={{ fill: "var(--accent)" }}>{nd.hints.length} hint{nd.hints.length > 1 ? "s" : ""}</text>}
+            </g>
+          );
+        })}
+        <text x={CX} y={CY - 4} textAnchor="middle" fontSize="12" style={{ fill: "var(--ink)" }}>{down === 0 ? "all nodes up" : `${down} node${down > 1 ? "s" : ""} down`}</text>
+        <text x={CX} y={CY + 14} textAnchor="middle" fontSize="9" style={{ fill: "var(--ink-3)" }}>click a node to crash it</text>
+      </svg>
+      <div className="mono" style={{ display: "flex", justifyContent: "space-around", gap: "1rem" }}>
+        <span>writes <b className={st.wOk === st.w ? "ok" : "bad"}>{st.wOk}/{st.w}</b> acked</span>
+        <span>reads <b className={st.rOk === st.r ? "ok" : "bad"}>{st.rOk}/{st.r}</b> served</span>
       </div>
-
-      <div className="out" style={{ minHeight: "2.6em" }}>
-        {rows.map((r, i) => (
-          <div key={i} style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            <span className={r.kind === "hint" ? "acc" : c.nodes[r.id].alive ? "" : "bad"}>n{r.id}{!c.nodes[r.id].alive && " ×"}</span> <span className="dim">{r.text}</span>
-          </div>
-        ))}
-      </div>
-      <div className="log" aria-live="polite">
-        {c.log.length === 0 ? <div className="dim">Try: partition → put from A → switch to client B → put another value → heal → get. Two siblings appear.</div> : c.log.slice(-4).map((l, i) => <div key={i}>{l}</div>)}
-      </div>
+      <div className="log" style={{ minHeight: "2.4em" }} aria-live="off">{flash ? flash.line : "Waiting for the first request…"}</div>
     </div>
   );
 }
