@@ -62,7 +62,7 @@ export default function Density() {
         <div className="tabs">{Object.keys(PRESETS).map((k) => <button key={k} className={`sm ${text === PRESETS[k] ? "on" : ""}`} onClick={() => setText(PRESETS[k])}>{k}</button>)}</div>
       </div>
 
-      <textarea className="field" rows={3} value={text} onChange={(e) => setText(e.target.value)} placeholder="Write or paste a Reddit-style post…" style={{ resize: "none", lineHeight: 1.5, fontFamily: "var(--sans)", fontSize: "0.95rem" }} aria-label="Post text" />
+      <textarea data-lenis-prevent className="field" rows={3} value={text} onChange={(e) => setText(e.target.value)} placeholder="Write or paste a Reddit-style post…" style={{ resize: "none", lineHeight: 1.5, fontFamily: "var(--sans)", fontSize: "0.95rem" }} aria-label="Post text" />
 
       <p style={{ margin: 0, fontFamily: "var(--serif)", fontSize: "1.02rem", lineHeight: 1.7, minHeight: "3.4rem", color: "var(--ink)" }}>{text.trim() ? parts : <span className="dim">Highlights appear here as you type.</span>}</p>
 

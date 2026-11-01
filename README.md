@@ -1,6 +1,6 @@
 # Ekansh Goyal, Portfolio
 
-A reel of scenes, because the research is about reading screenplays. Eight scenes: an opening, three project screens (two projects each), the papers, where I have worked, what I build with, and contact. Every project and paper carries a model of its core idea that really computes. Vite + React 19 + TypeScript. No animation libraries.
+A reel of scenes, because the research is about reading screenplays. Eight scenes: an opening, three project screens (two projects each), the papers, where I have worked, what I build with, and contact. Every project and paper carries a model of its core idea that really computes. Vite + React 19 + TypeScript. The only motion dependency is Lenis, for eased wheel scrolling.
 
 ## Run
 
@@ -19,6 +19,7 @@ npm run dev
 | `src/index.css` | Tokens (light and dark) and every style. Change `--accent` and the site follows. |
 | `src/App.tsx` | The eight scenes in order. |
 | `src/components/Hero.tsx` | The name page: the plate of letter tiles, the intro card (headline, pitch, three facts, Dean's List and Research List Award badges) and the scene strip. |
+| `src/lib/flow.ts` | How the page moves: Lenis-eased wheel scrolling, gliding in-page links and rail, content easing in as it arrives, the top progress bar, and the opening's drift. Everything is off under `prefers-reduced-motion`, and the hidden state of reveals is applied from here so nothing stays invisible if it fails. |
 | `src/components/Nav.tsx`, `Rail.tsx` | Top bar (Research, Contact, GitHub, theme toggle) and the scene index on the right edge. |
 | `src/components/Pages.tsx` | Shared layout: the scene header (`Slate`), the project `Card`, and `WorkPage` (two projects per screen). |
 | `src/components/Research.tsx` | The two papers, each with a demo (`Lgsm`, `Density`). |
@@ -71,8 +72,8 @@ Each shows one idea from the project and plays by itself. At most one or two con
 ## Notes
 
 - Theme is stored in `localStorage`, defaults to the OS setting, and is applied before paint by an inline script in `index.html`.
-- Pages scroll-snap on desktop (`proximity`, so it never fights the user) and stack naturally on small screens.
-- `prefers-reduced-motion` stops the transitions and the blinking caret.
+- Scrolling is eased with Lenis (wheel only; touch stays native) and there is no scroll-snap, so the scenes flow into one another. Reveals use `.rv-pre` / `.rv-in` on the targets listed in `flow.ts`. Elements that scroll on their own (the Truth Gradient textarea) carry `data-lenis-prevent`.
+- `prefers-reduced-motion` turns off smooth scrolling, the reveals, the tile entrance, the hero drift, the progress bar, the transitions and the blinking caret.
 - The contact form posts to Web3Forms (or an `endpoint`) when configured (`contactForm` in `content.ts`), otherwise opens a `mailto:` draft.
 - The "latest pushes" on the contact screen are fetched from the GitHub API at load; unauthenticated calls are rate-limited, and the strip simply hides if the request fails.
 - Screens fit one viewport at 1440x900; Applied (Anemia and Foresight) and Research run slightly taller because the demos use the room.

@@ -37,8 +37,7 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
-@media (min-width: 1000px) and (min-height: 700px) { html { scroll-snap-type: y proximity; } }
+html { -webkit-font-smoothing: antialiased; }
 body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 1rem; line-height: 1.55; overflow-x: hidden; transition: background 0.4s, color 0.4s; }
 ::selection { background: var(--accent); color: var(--accent-ink); }
 a { color: inherit; text-decoration: none; }
@@ -72,7 +71,7 @@ input, textarea, select { font: inherit; color: inherit; }
 @media (max-width: 999px) { .rail { display: none; } }
 
 /* ---------- pages ---------- */
-.page { min-height: 100svh; padding: 4.6rem 0 2.2rem; display: flex; flex-direction: column; justify-content: center; scroll-snap-align: start; border-top: 1px solid var(--rule); }
+.page { min-height: 100svh; padding: 4.6rem 0 2.2rem; display: flex; flex-direction: column; justify-content: center; border-top: 1px solid var(--rule); }
 .page.alt { background: var(--bg-2); }
 .slate { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: 1.2rem; flex-wrap: wrap; }
 .slate h2 { font-family: var(--serif); font-weight: 400; font-size: clamp(1.5rem, 2.4vw, 2.1rem); letter-spacing: -0.015em; margin: 0; font-variation-settings: "opsz" 100, "SOFT" 40; }
@@ -318,3 +317,17 @@ footer.foot .navbtn { font-size: 0.78rem; }
 .wf-bar { position: absolute; left: 16%; right: 16%; border-radius: 4px; transition: top 0.5s var(--ease), height 0.5s var(--ease); }
 .wf-val { position: absolute; left: -10%; right: -10%; text-align: center; font-family: var(--mono); font-size: 0.74rem; transition: top 0.5s var(--ease); }
 .wf-name { font-family: var(--mono); font-size: 0.66rem; line-height: 1.25; text-align: center; letter-spacing: 0.02em; }
+
+/* ---------- flow: smooth scroll, reveals, progress, parallax ---------- */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+[data-lenis-prevent] { overscroll-behavior: contain; }
+.progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; background: var(--accent); transform-origin: 0 50%; transform: scaleX(0); z-index: 60; pointer-events: none; }
+.rv-pre { opacity: 0; transform: translateY(30px); }
+.rv-in { animation: rvIn 0.9s var(--ease) backwards; animation-delay: var(--d, 0ms); }
+@keyframes rvIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: none; } }
+#opening .hero-main { transform: translateY(calc(var(--p, 0) * -42px)); opacity: calc(1 - var(--p, 0) * 0.7); will-change: transform, opacity; }
+.tile { animation: tilein 0.8s var(--ease) backwards; animation-delay: calc(var(--n, 0) * 55ms + 150ms); }
+@keyframes tilein { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .tile, .rv-in { animation: none; } .rv-pre { opacity: 1; transform: none; } #opening .hero-main { transform: none; opacity: 1; } .progress { display: none; } html { scroll-behavior: auto; } }

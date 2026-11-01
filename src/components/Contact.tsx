@@ -58,7 +58,7 @@ export default function Contact({ id, scene }: { id: string; scene: number }) {
       <div className="wrap">
         <Slate scene={scene} title={<>Got a hard problem? <em>Tell me.</em></>} note="final scene" />
         <div className="pair" style={{ gap: "3rem", alignItems: "start" }}>
-          <div>
+          <div className="contact-intro">
             <p style={{ color: "var(--ink-2)", maxWidth: "30rem", margin: "0 0 1.4rem" }}>
               Research collaborations, systems work, or something that does not have a name yet.
             </p>

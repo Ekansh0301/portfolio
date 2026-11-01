@@ -53,7 +53,7 @@ export default function Hero({ id }: { id: string }) {
                   {row.map((l) => {
                     const idx = ++n, on = idx === active;
                     return (
-                      <button key={idx} className={`tile ${on ? "on" : ""}`} aria-label={`${l.ch}: ${l.word}${l.repo ? ", " + l.repo : ""}. ${l.line}`}
+                      <button key={idx} style={{ ["--n" as string]: idx }} className={`tile ${on ? "on" : ""}`} aria-label={`${l.ch}: ${l.word}${l.repo ? ", " + l.repo : ""}. ${l.line}`}
                         onPointerEnter={() => { hover.current = true; setActive(idx); }}
                         onFocus={() => { hover.current = true; setActive(idx); }}
                         onClick={() => { hover.current = true; setActive(idx); }}>
