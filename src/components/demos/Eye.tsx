@@ -200,7 +200,6 @@ export default function Eye() {
           </svg>
         </div>
       </div>
-      <div className="mono dim" style={{ fontSize: "0.58rem" }}>Photo: J. Trobe, MD, Univ. of Michigan Kellogg Eye Center, CC BY 3.0 (Wikimedia Commons), cropped and colour-softened to a gentler look. Earlier visits simulated by grading.</div>
     </div>
   );
 }

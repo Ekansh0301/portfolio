@@ -17,7 +17,7 @@ const WEIGHTS: Record<string, Record<K, number>> = {
   DIALOGUE: { N: 0.2, C: 0.2, W: 0.2, Ch: 0.4 },
 };
 type Row = { k: K; v: number };
-type Side = { text: string; flag?: string; rows: Row[]; verdict: string; gains?: string[] };
+type Side = { text: string; flag?: string; rows: Row[]; chips: string[] };
 type Turn = { tab: string; trap: string; focus: K; state: string[]; player: string; intent: keyof typeof WEIGHTS; base: Side; ppo: Side };
 
 const TURNS: Turn[] = [
@@ -25,29 +25,29 @@ const TURNS: Turn[] = [
     tab: "Ignored action", trap: "causal gap", focus: "C", intent: "ACTION",
     state: ["tavern, evening", "goblins in the far corner"],
     player: "I cast Fireball at the group of goblins in the corner!",
-    base: { text: "The tavern erupts in chaos as patrons dive for cover. The bartender shouts something about his establishment. You notice the wooden beams overhead are old and weathered.", flag: "The tavern erupts in chaos as patrons dive for cover.", rows: [{ k: "N", v: 0.61 }, { k: "C", v: 0.09 }, { k: "W", v: 0.54 }], verdict: "Never resolves the spell: no damage, no goblins." },
-    ppo: { text: "Your Fireball streaks into the corner and blooms into a sphere of flame. The goblins shriek as it engulfs them. Roll 8d6 fire damage. Two are incinerated outright; the third staggers clear, badly burned, smoke curling off his cloak. What do you do next?", rows: [{ k: "N", v: 0.68 }, { k: "C", v: 0.94 }, { k: "W", v: 0.89 }], verdict: "Resolves the action with consequences.", gains: ["resolves the spell", "damage dice (8d6)", "names who survives"] },
+    base: { text: "The tavern erupts in chaos as patrons dive for cover. The bartender shouts something about his establishment. You notice the wooden beams overhead are old and weathered.", flag: "The tavern erupts in chaos as patrons dive for cover.", rows: [{ k: "N", v: 0.61 }, { k: "C", v: 0.09 }, { k: "W", v: 0.54 }], chips: ["never resolves the spell", "no damage", "no goblins hit"] },
+    ppo: { text: "Your Fireball streaks into the corner and blooms into a sphere of flame. The goblins shriek as it engulfs them. Roll 8d6 fire damage. Two are incinerated outright; the third staggers clear, badly burned, smoke curling off his cloak. What do you do next?", rows: [{ k: "N", v: 0.68 }, { k: "C", v: 0.94 }, { k: "W", v: 0.89 }], chips: ["resolves the spell", "damage dice (8d6)", "names who survives"] },
   },
   {
     tab: "Locked door", trap: "contradiction", focus: "W", intent: "ACTION",
     state: ["ancient door: LOCKED", "key: not found"],
     player: "I push on the door.",
-    base: { text: "The door gives way with a groan of old hinges, revealing a dark corridor that smells of damp stone. Somewhere ahead, water drips.", flag: "The door gives way with a groan of old hinges", rows: [{ k: "W", v: 0.0 }], verdict: "Door state changed from locked to open with no unlock action." },
-    ppo: { text: "The door doesn't budge. The iron lock holds fast, and fresh scratches around the keyhole suggest someone else has tried before you. Something small and brass glints in the dust by the hinge.", rows: [{ k: "W", v: 1.0 }], verdict: "Consistent with the established state.", gains: ["keeps the lock", "adds a clue", "points toward the key"] },
+    base: { text: "The door gives way with a groan of old hinges, revealing a dark corridor that smells of damp stone. Somewhere ahead, water drips.", flag: "The door gives way with a groan of old hinges", rows: [{ k: "W", v: 0.0 }], chips: ["opens a locked door", "no key used"] },
+    ppo: { text: "The door doesn't budge. The iron lock holds fast, and fresh scratches around the keyhole suggest someone else has tried before you. Something small and brass glints in the dust by the hinge.", rows: [{ k: "W", v: 1.0 }], chips: ["keeps the lock", "adds a clue", "points toward the key"] },
   },
   {
     tab: "Quiet tavern", trap: "hallucination", focus: "W", intent: "EXPLORE",
     state: ["tavern: quiet, dimly lit", "a few patrons, scattered"],
     player: "I look around the room.",
-    base: { text: "Two merchants haggle by the fire while a pair of guards share a table near the door. A bard tunes his lute beside three scholars deep in debate, and a cook hauls out a tray of bread.", flag: "Two merchants haggle by the fire while a pair of guards share a table near the door. A bard tunes his lute beside three scholars", rows: [{ k: "W", v: 0.3 }], verdict: "Eight new people in a room established as quiet." },
-    ppo: { text: "The tavern is nearly empty. A hooded traveler sits alone in the corner nursing an ale, and glances up when you turn. The only other sound is the crackle of the hearth.", rows: [{ k: "W", v: 1.0 }], verdict: "One new entity: within the acceptable range.", gains: ["one new entity only", "keeps the mood quiet", "gives you a hook"] },
+    base: { text: "Two merchants haggle by the fire while a pair of guards share a table near the door. A bard tunes his lute beside three scholars deep in debate, and a cook hauls out a tray of bread.", flag: "Two merchants haggle by the fire while a pair of guards share a table near the door. A bard tunes his lute beside three scholars", rows: [{ k: "W", v: 0.3 }], chips: ["eight new people", "breaks the quiet mood"] },
+    ppo: { text: "The tavern is nearly empty. A hooded traveler sits alone in the corner nursing an ale, and glances up when you turn. The only other sound is the crackle of the hearth.", rows: [{ k: "W", v: 1.0 }], chips: ["one new entity only", "keeps the mood quiet", "gives you a hook"] },
   },
   {
     tab: "Forgotten name", trap: "amnesia", focus: "W", intent: "DIALOGUE",
     state: ["innkeeper: Gregor Thorngage", "halfling, proprietor"],
     player: "I ask the innkeeper about local rumors.",
-    base: { text: "The innkeeper leans close and lowers his voice. “Lights in the old quarry, friend. Folk won't go near it after dark,” he says, though you realise you never caught his name.", flag: "though you realise you never caught his name", rows: [{ k: "W", v: 0.5 }], verdict: "He introduced himself as Gregor Thorngage; the name is lost." },
-    ppo: { text: "Gregor Thorngage leans across the bar and lowers his voice. “Lights in the old quarry, friend. Folk won't go near it after dark.” He wipes the same glass twice, eyes on the door.", rows: [{ k: "W", v: 1.0 }], verdict: "Keeps the NPC's name and voice.", gains: ["Gregor, by name", "rumor in his own voice", "a hook: the quarry"] },
+    base: { text: "The innkeeper leans close and lowers his voice. “Lights in the old quarry, friend. Folk won't go near it after dark,” he says, though you realise you never caught his name.", flag: "though you realise you never caught his name", rows: [{ k: "W", v: 0.5 }], chips: ["forgets Gregor's name", "loses his voice"] },
+    ppo: { text: "Gregor Thorngage leans across the bar and lowers his voice. “Lights in the old quarry, friend. Folk won't go near it after dark.” He wipes the same glass twice, eyes on the door.", rows: [{ k: "W", v: 1.0 }], chips: ["Gregor, by name", "rumor in his own voice", "a hook: the quarry"] },
   },
 ];
 
@@ -59,20 +59,18 @@ function Flagged({ text, flag }: { text: string; flag?: string }) {
 
 function Card({ title, side, tone, w }: { title: string; side: Side; tone: "base" | "ppo"; w: Record<K, number> }) {
   const good = tone === "ppo";
-  // One score per answer: the intent-weighted reward over the critics scored, or the lone critic's score.
+  // One overall score per answer: the intent-weighted reward over the critics scored, or the lone critic's score.
   const wsum = side.rows.reduce((a, r) => a + w[r.k], 0);
   const score = side.rows.length > 1 ? side.rows.reduce((a, r) => a + w[r.k] * r.v, 0) / wsum : side.rows[0].v;
-  const label = side.rows.length > 1 ? "intent-weighted reward" : `${NAMES[side.rows[0].k].toLowerCase()} critic`;
+  const c = good ? "var(--ok)" : "var(--bad)";
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "0.55rem", border: `1px solid ${good ? "var(--accent)" : "var(--rule)"}`, borderRadius: 10, padding: "0.75rem 0.85rem", background: "var(--card)", minWidth: 0 }}>
-      <div className="mono" style={{ fontSize: "0.64rem", letterSpacing: "0.08em", textTransform: "uppercase", color: good ? "var(--accent)" : "var(--ink-3)" }}>{title}</div>
-      <p style={{ margin: 0, fontFamily: "var(--serif)", fontSize: "0.9rem", lineHeight: 1.45, flex: 1, color: good ? "var(--ink)" : "var(--ink-2)" }}><Flagged text={side.text} flag={side.flag} /></p>
-      {side.gains && <div className="chips">{side.gains.map((g) => <span key={g} className="chip" style={{ background: "color-mix(in srgb, var(--ok) 14%, transparent)", color: "var(--ok)" }}>+ {g}</span>)}</div>}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", borderTop: "1px solid var(--rule)", paddingTop: 6 }}>
-        <span className="mono dim" style={{ fontSize: "0.6rem" }}>{label}</span>
-        <span style={{ fontFamily: "var(--serif)", fontSize: "1.9rem", lineHeight: 1, color: score < 0.5 ? "var(--bad)" : good ? "var(--ok)" : "var(--ink)" }}>{score.toFixed(2)}</span>
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", border: `1px solid ${good ? "var(--accent)" : "var(--rule)"}`, borderRadius: 10, padding: "0.75rem 0.85rem", background: "var(--card)", minWidth: 0 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+        <span className="mono" style={{ fontSize: "0.64rem", letterSpacing: "0.08em", textTransform: "uppercase", color: good ? "var(--accent)" : "var(--ink-3)" }}>{title}</span>
+        <span className="mono" title="overall score" style={{ fontSize: "0.78rem", color: score < 0.5 ? "var(--bad)" : good ? "var(--ok)" : "var(--ink)" }}>score {score.toFixed(2)}</span>
       </div>
-      <div className="mono" style={{ fontSize: "0.66rem", lineHeight: 1.4, color: good ? "var(--ok)" : "var(--bad)" }}>{good ? "✓" : "✗"} {side.verdict}</div>
+      <p style={{ margin: 0, fontFamily: "var(--serif)", fontSize: "0.9rem", lineHeight: 1.45, flex: 1, color: good ? "var(--ink)" : "var(--ink-2)" }}><Flagged text={side.text} flag={side.flag} /></p>
+      <div className="chips">{side.chips.map((g) => <span key={g} className="chip" style={{ background: `color-mix(in srgb, ${c} 14%, transparent)`, color: c }}>{good ? "+" : "−"} {g}</span>)}</div>
     </div>
   );
 }

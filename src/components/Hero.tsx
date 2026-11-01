@@ -87,13 +87,14 @@ export default function Hero({ id }: { id: string }) {
 
           <div className="titlepage">
             <div className="mono dim"><span className="status">{profile.availability}</span></div>
-            <p className="role" style={{ fontFamily: "var(--serif)", fontSize: "clamp(1.25rem, 1.9vw, 1.7rem)", lineHeight: 1.25, color: "var(--ink)" }}>{profile.eyebrow}</p>
-            <p className="role">{profile.blurb}</p>
-            <ul className="facts">
-              <li><b>EMNLP 2026</b><span>Scene saliency in movie screenplays, main conference</span></li>
-              <li><b>SEMEVAL-26</b><span>Conspiracy belief detection, sole author</span></li>
-              <li><b>LTRC</b><span>Undergraduate researcher, IIIT Hyderabad</span></li>
-            </ul>
+            <h2 className="hl">Turning research into <em>systems</em>.</h2>
+            <p className="role">NLP researcher and systems engineer. I read papers on narrative and belief, then build the distributed stores, voice assistants and cipher suites that put the ideas to work.</p>
+            <div className="stats">
+              <div><b>2</b><span>papers, 2026<br />EMNLP · SemEval</span></div>
+              <div><b>1st</b><span>prize<br />LPL WealthX 2026</span></div>
+              <div><b>8.21</b><span>CGPA<br />dual degree</span></div>
+            </div>
+            <p className="mono dim" style={{ margin: 0, fontSize: "0.68rem" }}>LTRC · IIIT Hyderabad · B.Tech CS + MS by Research, Computational Linguistics</p>
           </div>
         </div>
       </div>

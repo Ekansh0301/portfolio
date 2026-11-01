@@ -107,10 +107,10 @@ export const projects: Project[] = [
   {
     title: "Foresight",
     short:
-      "A decision layer for financial advisors. It runs a recommendation and its alternatives on the same 10,000 futures, explains in dollars why one wins, and writes a file a regulator can replay.",
+      "Crash-test every recommendation before the client signs. Foresight reads a family's statements into a digital twin, runs a recommendation and its alternatives through the same 10,000 futures, explains the winner in dollars, and writes a file a regulator can replay. Six decisions, a market monitor for who to call when markets fall, supervision tools, and an MCP server for AI agents.",
     blurb:
-      "Crash-test every recommendation before the client signs. Foresight reads a family's statements into a digital twin, runs a recommendation and its alternatives through the same 10,000 simulated futures, and turns the answer into a Best-Interest File: every number linked to its source, a replay that reproduces it to the cent, and a tamper-evident record. First prize at LPL WealthX 2026, with Krishna and Devansh.",
-    stack: ["Python", "NumPy", "Next.js"],
+      "Foresight is a decision layer for financial advisors and the principals who supervise them: a digital twin of the household, a paired comparison on identical futures, a cause-by-cause Value Bridge, and a replayable Best-Interest File. First prize at LPL WealthX 2026, with Krishna and Devansh.",
+    stack: ["Python", "NumPy", "FastAPI", "Next.js", "MCP"],
     metric: "First prize · LPL WealthX 2026",
     video: "https://youtu.be/DF43X6l2lD0",
     demo: "futures",
@@ -141,42 +141,39 @@ export const experience = [
     period: "May 2025 - Present",
     org: "LTRC · IIIT Hyderabad",
     role: "Undergraduate Researcher",
-    advisor: "Advisor: Prof. Rajakrishnan Rajkumar",
-    summary:
-      "Deep-learning NLP for narrative and psycholinguistics: what makes a scene matter, and how belief shows up in text.",
+    advisor: "Prof. Rajakrishnan Rajkumar",
+    summary: "Deep-learning NLP on narrative and belief.",
     points: [
-      "First author of the SemEval-2026 paper on conspiracy belief detection.",
-      "Led the EMNLP 2026 scene-saliency paper: +16% detection F1 on a 133K-sample dataset through architecture changes and ablations.",
-      "Built reproducible experiment infrastructure (data versioning, hyperparameter tracking, CI evaluation): 40% faster iteration.",
-      "Teaching Assistant for Computational Linguistics II, with formal commendation. Research List Award, 2025-26.",
+      "First author, SemEval-2026 conspiracy-belief paper",
+      "Led the EMNLP 2026 scene-saliency paper (+16% F1)",
+      "Reproducible experiment tooling: 40% faster iteration",
     ],
-    tags: ["PyTorch", "Transformers", "SHAP", "CI"],
+    tags: ["PyTorch", "Transformers", "SHAP"],
   },
   {
-    period: "May 2025 - June 2025",
+    period: "May - June 2025",
     org: "Sanwariya Ji Synthetics",
     role: "Software Engineer Intern",
     advisor: "Industry internship",
-    summary: "Replaced a legacy dispatch workflow with an automated inventory pipeline.",
+    summary: "Automated a legacy inventory workflow.",
     points: [
-      "Integrated YOLO and PaddleOCR to digitize handwritten records.",
-      "Normalized the ingested data into a structured SQL schema.",
-      "Eliminated manual entry errors and data discrepancies.",
+      "YOLO and PaddleOCR digitize handwritten records",
+      "Clean SQL schema, no manual-entry errors",
     ],
-    tags: ["Python", "YOLO", "PaddleOCR", "SQL"],
+    tags: ["Python", "YOLO", "SQL"],
   },
   {
-    period: "Jan 2025 - April 2025",
+    period: "Jan - April 2025",
     org: "SDG3 Health",
     role: "Software Engineering Intern",
-    advisor: "Team of five · private repository",
-    summary: "Non-invasive anemia detection from a photo of the inner eyelid, built for low-resource clinics.",
+    advisor: "Team of five",
+    summary: "Non-invasive anemia screening for clinics.",
     points: [
-      "Owned a medical imaging platform for 50,000+ diagnostic images, with production REST APIs and containerized pipelines.",
-      "UNet++ conjunctiva segmentation at 94% Dice, shipped as a 1.5 MB quantized model in a React Native app.",
-      "Cut cloud inference cost 68% through quantization and pruning, with Docker edge packaging for the field.",
+      "50,000+ images, REST APIs, containerized pipelines",
+      "UNet++ at 94% Dice, 1.5 MB on the phone",
+      "Inference cost down 68% via quantization and pruning",
     ],
-    tags: ["UNet++", "ONNX", "React Native", "Docker"],
+    tags: ["UNet++", "ONNX", "React Native"],
   },
 ];
 
@@ -186,39 +183,14 @@ export type SkillGroup = {
 };
 
 export const skillGroups: SkillGroup[] = [
-  {
-    label: "Languages",
-    items: ["Python", "C", "TypeScript", "JavaScript", "SQL", "Bash"],
-  },
-  {
-    label: "Deep Learning",
-    items: ["PyTorch", "Transformers", "HuggingFace", "PPO", "QLoRA", "LoRA"],
-  },
-  {
-    label: "Models & Inference",
-    items: ["DeBERTa", "BERT", "YOLO", "UNet++", "PaddleOCR", "ONNX", "TFLite"],
-  },
-  {
-    label: "Systems & Infra",
-    items: [
-      "Distributed Systems", "POSIX Threads", "TCP/IP", "Docker",
-      "Redis", "Linux", "CI/CD", "Cryptography",
-    ],
-  },
-  {
-    label: "Web & Product",
-    items: [
-      "React", "Node.js", "Express", "FastAPI", "MongoDB",
-      "Streamlit", "React Native", "PyQt6", "PWA",
-    ],
-  },
-  {
-    label: "Foundations",
-    items: [
-      "Data Structures & Algorithms", "Operating Systems", "Computer Networks",
-      "Statistical Methods in AI", "Empirical Methods in NLP",
-    ],
-  },
+  { label: "Languages", items: ["Python", "C", "C++", "TypeScript", "JavaScript", "SQL", "Bash", "GDScript"] },
+  { label: "Data & ML", items: ["PyTorch", "NumPy", "Pandas", "Scikit-learn", "OpenCV", "HuggingFace Transformers", "PPO", "QLoRA", "SHAP"] },
+  { label: "Models", items: ["DeBERTa", "BERT", "Phi-2", "Whisper", "Qwen", "UNet++", "YOLO", "PaddleOCR", "ONNX Runtime", "TFLite", "Ollama"] },
+  { label: "Systems & Infra", items: ["Distributed Systems", "Multi-threading", "POSIX", "TCP/IP", "Linux/Unix", "Raft", "Redis", "Docker", "Git"] },
+  { label: "Software Engineering", items: ["System Design", "REST APIs", "Microservices", "Test-Driven Development", "CI/CD", "FastAPI", "MCP"] },
+  { label: "Web & Product", items: ["React", "Next.js", "Node.js", "Express", "React Native", "Expo", "MongoDB", "Streamlit", "PyQt6", "Godot"] },
+  { label: "Research", items: ["Empirical Methods in NLP", "Statistical Methods in AI", "Psycholinguistics", "LLM-as-a-Judge", "Ablation studies"] },
+  { label: "Coursework", items: ["Data Structures & Algorithms", "Algorithm Analysis & Design", "Operating Systems & Networks", "Design & Analysis of Software Systems", "Data & Applications", "Computer Systems Organization", "Probability & Statistics", "Discrete Structures"] },
 ];
 
 
@@ -229,7 +201,17 @@ export const scenes = [
   { id: "intelligence", label: "Voice & crypto" },
   { id: "applied", label: "Applied" },
   { id: "research", label: "Research" },
+  { id: "achievements", label: "Recognition" },
   { id: "experience", label: "Experience" },
   { id: "tools", label: "Tools" },
   { id: "contact", label: "Contact" },
+] as const;
+
+export const achievements = [
+  { big: "1st", title: "First prize, LPL WealthX 2026", line: "Foresight, with Team Random." },
+  { big: "EMNLP", title: "Main-conference paper, 2026", line: "Scene saliency in movie screenplays." },
+  { big: "SemEval", title: "Sole-author system paper, 2026", line: "Task 10: 0.750 macro F1 on the official test." },
+  { big: "2025-26", title: "Research List Award", line: "Recipient, 2025-26." },
+  { big: "TA", title: "Teaching Assistant", line: "Computational Linguistics II, with formal commendation." },
+  { big: "8.21", title: "CGPA, dual degree", line: "B.Tech in CS and MS by Research in Computational Linguistics." },
 ] as const;
